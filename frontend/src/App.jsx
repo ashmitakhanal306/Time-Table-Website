@@ -1,122 +1,201 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import { api } from './api';
+import AdminPortal from './components/AdminPortal';
+import TeacherPortal from './components/TeacherPortal';
+import StudentPortal from './components/StudentPortal';
+import './index.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [token, setToken] = useState(null);
+  const [schoolId, setSchoolId] = useState(null);
+  const [schoolName, setSchoolName] = useState('');
+  const [roleTab, setRoleTab] = useState('Admin'); // 'Admin', 'Teacher', 'Student'
+  
+  // Login form state
+  const [email, setEmail] = useState('admin@springdale.edu');
+  const [password, setPassword] = useState('password123');
+  const [loginError, setLoginError] = useState(null);
+
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [regName, setRegName] = useState('');
+  const [regSubdomain, setRegSubdomain] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regError, setRegError] = useState(null);
+  const [regSuccess, setRegSuccess] = useState(null);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError(null);
+    try {
+      const res = await api.login(email, password);
+      setToken(res.access_token);
+      
+      // Parse token (dirty but works for extracting school_id without another request)
+      const payload = JSON.parse(atob(res.access_token.split('.')[1]));
+      const sId = payload.school_id;
+      setSchoolId(sId);
+      
+      // Get school name
+      const schools = await api.listSchools();
+      const s = schools.find(school => school.id === sId);
+      if (s) {
+        setSchoolName(s.name);
+      }
+    } catch (err) {
+      setLoginError(err.message);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setRegError(null);
+    setRegSuccess(null);
+    try {
+      await api.createSchool({
+        name: regName,
+        subdomain: regSubdomain,
+        admin_email: regEmail,
+        admin_password: regPassword
+      });
+      setRegSuccess("School created successfully! You can now log in.");
+      setEmail(regEmail);
+      setIsRegistering(false);
+    } catch (err) {
+      setRegError(err.message);
+    }
+  };
+
+  const handleLogout = () => {
+    setToken(null);
+    setSchoolId(null);
+    setSchoolName('');
+  };
+
+  if (!token) {
+    if (isRegistering) {
+      return (
+        <div className="login-container">
+          <div className="login-box" style={{ maxWidth: '400px' }}>
+            <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Register New School</h2>
+            {regError && <div className="error-banner">{regError}</div>}
+            <form onSubmit={handleRegister}>
+              <div className="form-group">
+                <label>School Name</label>
+                <input className="input" type="text" value={regName} onChange={e => setRegName(e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Subdomain (e.g. myschool)</label>
+                <input className="input" type="text" value={regSubdomain} onChange={e => setRegSubdomain(e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Admin Email</label>
+                <input className="input" type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Admin Password</label>
+                <input className="input" type="password" value={regPassword} onChange={e => setRegPassword(e.target.value)} required />
+              </div>
+              <button className="btn btn-primary" type="submit" style={{ width: '100%', marginTop: '1rem' }}>
+                Register School
+              </button>
+            </form>
+            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+              <button className="btn btn-secondary" onClick={() => setIsRegistering(false)} style={{ width: '100%' }}>
+                Back to Login
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="login-container">
+        <div className="login-box">
+          <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Timetable Login</h2>
+          {regSuccess && <div style={{ padding: '1rem', background: '#dcfce3', color: '#166534', borderRadius: '6px', marginBottom: '1rem', border: '1px solid #86efac' }}>{regSuccess}</div>}
+          {loginError && <div className="error-banner">{loginError}</div>}
+          
+          <form onSubmit={handleLogin}>
+            <div className="form-group">
+              <label>Email</label>
+              <input 
+                className="input" 
+                type="email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                required 
+              />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input 
+                className="input" 
+                type="password" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                required 
+              />
+            </div>
+            <button className="btn btn-primary" type="submit" style={{ width: '100%', marginTop: '1rem' }}>
+              Sign In
+            </button>
+          </form>
+          <div style={{ marginTop: '1rem', textAlign: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+            <p style={{ marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Don't have a school yet?</p>
+            <button className="btn btn-secondary" onClick={() => setIsRegistering(true)} style={{ width: '100%' }}>
+              Register New School
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app-shell">
+      <div className="sidebar">
+        <div className="sidebar-header">
+          <h3 style={{ margin: 0 }}>{schoolName}</h3>
+          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+            Timetable System
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+        <div className="sidebar-nav">
+          <div 
+            className={`nav-item ${roleTab === 'Admin' ? 'active' : ''}`}
+            onClick={() => setRoleTab('Admin')}
+          >
+            Admin Portal
+          </div>
+          <div 
+            className={`nav-item ${roleTab === 'Teacher' ? 'active' : ''}`}
+            onClick={() => setRoleTab('Teacher')}
+          >
+            Teacher Portal
+          </div>
+          <div 
+            className={`nav-item ${roleTab === 'Student' ? 'active' : ''}`}
+            onClick={() => setRoleTab('Student')}
+          >
+            Student Portal
+          </div>
+          <div style={{ padding: '1.5rem', marginTop: 'auto' }}>
+            <button className="btn btn-secondary" style={{ width: '100%' }} onClick={handleLogout}>
+              Log out
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      </div>
+      
+      <div className="main-content">
+        {roleTab === 'Admin' && <AdminPortal schoolId={schoolId} token={token} />}
+        {roleTab === 'Teacher' && <TeacherPortal schoolId={schoolId} token={token} />}
+        {roleTab === 'Student' && <StudentPortal schoolId={schoolId} token={token} />}
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;

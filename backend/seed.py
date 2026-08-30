@@ -147,33 +147,38 @@ def seed():
     
     # Teachers
     teachers = [
-        # Activity teachers (3 per activity, shared across both tiers because blocks are staggered)
-        Teacher(school_id=school1.id, name="Mus1", email="m1@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["MUS"].id]),
-        Teacher(school_id=school1.id, name="Mus2", email="m2@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["MUS"].id]),
-        Teacher(school_id=school1.id, name="Mus3", email="m3@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["MUS"].id]),
-        Teacher(school_id=school1.id, name="Art1", email="a1@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["ART"].id]),
-        Teacher(school_id=school1.id, name="Art2", email="a2@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["ART"].id]),
-        Teacher(school_id=school1.id, name="Art3", email="a3@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["ART"].id]),
-        
-        # Academic teachers
-        Teacher(school_id=school1.id, name="MathSci1", email="ms1@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
-        Teacher(school_id=school1.id, name="MathSci2", email="ms2@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
-        Teacher(school_id=school1.id, name="MathSci3", email="ms3@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
-        Teacher(school_id=school1.id, name="MathSci4", email="ms4@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
-        Teacher(school_id=school1.id, name="MathSci5", email="ms5@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
-        Teacher(school_id=school1.id, name="MathSci6", email="ms6@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
-        
-        Teacher(school_id=school1.id, name="EngSst1", email="es1@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["ENG"].id, subjects["SST"].id]),
-        Teacher(school_id=school1.id, name="EngSst2", email="es2@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["ENG"].id, subjects["SST"].id]),
-        Teacher(school_id=school1.id, name="EngSst3", email="es3@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["ENG"].id, subjects["SST"].id]),
-        Teacher(school_id=school1.id, name="EngSst4", email="es4@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["ENG"].id, subjects["SST"].id]),
-        Teacher(school_id=school1.id, name="EngSst5", email="es5@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["ENG"].id, subjects["SST"].id]),
-        
-        Teacher(school_id=school1.id, name="Hin1", email="h1@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["HIN"].id]),
-        Teacher(school_id=school1.id, name="Hin2", email="h2@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["HIN"].id]),
-        
-        Teacher(school_id=school1.id, name="CS1", email="cs1@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["CS"].id]),
-        Teacher(school_id=school1.id, name="CS2", email="cs2@a.c", max_periods_per_day=5, qualified_subject_ids=[subjects["CS"].id]),
+        # Music teachers
+        Teacher(school_id=school1.id, name="Riya Desai",      email="riya.desai@springdale.edu",      max_periods_per_day=5, qualified_subject_ids=[subjects["MUS"].id]),
+        Teacher(school_id=school1.id, name="Kabir Nair",      email="kabir.nair@springdale.edu",      max_periods_per_day=5, qualified_subject_ids=[subjects["MUS"].id]),
+        Teacher(school_id=school1.id, name="Meena Pillai",    email="meena.pillai@springdale.edu",    max_periods_per_day=5, qualified_subject_ids=[subjects["MUS"].id]),
+
+        # Art teachers
+        Teacher(school_id=school1.id, name="Ananya Bose",     email="ananya.bose@springdale.edu",     max_periods_per_day=5, qualified_subject_ids=[subjects["ART"].id]),
+        Teacher(school_id=school1.id, name="Vikram Joshi",    email="vikram.joshi@springdale.edu",    max_periods_per_day=5, qualified_subject_ids=[subjects["ART"].id]),
+        Teacher(school_id=school1.id, name="Sunita Rao",      email="sunita.rao@springdale.edu",      max_periods_per_day=5, qualified_subject_ids=[subjects["ART"].id]),
+
+        # Math & Science teachers
+        Teacher(school_id=school1.id, name="Priya Sharma",    email="priya.sharma@springdale.edu",    max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
+        Teacher(school_id=school1.id, name="Arjun Mehta",     email="arjun.mehta@springdale.edu",     max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
+        Teacher(school_id=school1.id, name="Deepa Krishnan",  email="deepa.krishnan@springdale.edu",  max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
+        Teacher(school_id=school1.id, name="Rohan Verma",     email="rohan.verma@springdale.edu",     max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
+        Teacher(school_id=school1.id, name="Shalini Gupta",   email="shalini.gupta@springdale.edu",   max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
+        Teacher(school_id=school1.id, name="Nikhil Patil",    email="nikhil.patil@springdale.edu",    max_periods_per_day=5, qualified_subject_ids=[subjects["MATH"].id, subjects["SCI"].id]),
+
+        # English & Social Studies teachers
+        Teacher(school_id=school1.id, name="Kavya Menon",     email="kavya.menon@springdale.edu",     max_periods_per_day=5, qualified_subject_ids=[subjects["ENG"].id, subjects["SST"].id]),
+        Teacher(school_id=school1.id, name="Aditya Iyer",     email="aditya.iyer@springdale.edu",     max_periods_per_day=5, qualified_subject_ids=[subjects["ENG"].id, subjects["SST"].id]),
+        Teacher(school_id=school1.id, name="Pooja Tiwari",    email="pooja.tiwari@springdale.edu",    max_periods_per_day=5, qualified_subject_ids=[subjects["ENG"].id, subjects["SST"].id]),
+        Teacher(school_id=school1.id, name="Manish Chandra",  email="manish.chandra@springdale.edu",  max_periods_per_day=5, qualified_subject_ids=[subjects["ENG"].id, subjects["SST"].id]),
+        Teacher(school_id=school1.id, name="Lalitha Subramanian", email="lalitha.s@springdale.edu",  max_periods_per_day=5, qualified_subject_ids=[subjects["ENG"].id, subjects["SST"].id]),
+
+        # Hindi teachers
+        Teacher(school_id=school1.id, name="Geeta Pandey",    email="geeta.pandey@springdale.edu",    max_periods_per_day=5, qualified_subject_ids=[subjects["HIN"].id]),
+        Teacher(school_id=school1.id, name="Ramesh Tripathi", email="ramesh.tripathi@springdale.edu", max_periods_per_day=5, qualified_subject_ids=[subjects["HIN"].id]),
+
+        # Computer Science teachers
+        Teacher(school_id=school1.id, name="Swati Kulkarni",  email="swati.kulkarni@springdale.edu",  max_periods_per_day=5, qualified_subject_ids=[subjects["CS"].id]),
+        Teacher(school_id=school1.id, name="Dev Malhotra",    email="dev.malhotra@springdale.edu",    max_periods_per_day=5, qualified_subject_ids=[subjects["CS"].id]),
     ]
     db.add_all(teachers)
     db.commit()
