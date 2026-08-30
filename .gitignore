@@ -37,3 +37,7 @@ dist-ssr/
 # Editor
 .vscode/
 .idea/
+
+# Database files (SQLite production data)
+*.db
+!backend/tests/*.db
