@@ -48,6 +48,22 @@ export const api = {
     return handleResponse(res);
   },
 
+  getSchool: async (schoolId, token) => {
+    const res = await fetch(`/api/schools/${schoolId}`, {
+      headers: getHeaders(token),
+    });
+    return handleResponse(res);
+  },
+
+  updateSchool: async (schoolId, data, token) => {
+    const res = await fetch(`/api/schools/${schoolId}`, {
+      method: 'PUT',
+      headers: getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
   createConfigEntity: async (schoolId, entityType, data, token) => {
     const res = await fetch(`/api/schools/${schoolId}/${entityType}`, {
       method: 'POST',

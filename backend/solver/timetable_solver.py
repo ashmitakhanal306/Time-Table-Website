@@ -37,7 +37,27 @@ def generate_timetable(db, school_id, time_limit_seconds=30):
                 "entries": [],
                 "infeasibility_reason": f"Subject '{s_name}': weekly demand ({demand}) exceeds the combined capacity of its qualified teacher(s) ({supply})."
             }
-            
+
+    # Pre-check: every tier that has classes+requirements must have period slots
+    tiers_with_classes = set()
+    for c in classes:
+        tier = grade_levels[c.grade_id].tier
+        if class_reqs_precheck := [r for r in reqs if r.class_section_id == c.id]:
+            tiers_with_classes.add(tier)
+
+    slot_tiers = {s.tier for s in slots}
+    for tier in sorted(tiers_with_classes):
+        if tier not in slot_tiers:
+            return {
+                "status": "INFEASIBLE",
+                "entries": [],
+                "infeasibility_reason": (
+                    f"No period structure configured for tier '{tier}'. "
+                    f"Go to School Setup → Period Structure, select the '{tier}' tier, "
+                    f"and save at least one teaching slot before generating."
+                ),
+            }
+
     model = cp_model.CpModel()
     
     blocks_by_tier = defaultdict(list)

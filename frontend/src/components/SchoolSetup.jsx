@@ -196,6 +196,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
 
   // Tab definitions — ordered by dependency
   const tabs = [
+    'School Settings',
     'Grades',
     'Classes',
     'Subjects',
@@ -206,6 +207,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
   ];
 
   const tabLabels = {
+    'School Settings':  '0 · Settings',
     'Grades':           '1 · Grades',
     'Classes':          '2 · Classes',
     'Subjects':         '3 · Subjects',
@@ -233,14 +235,37 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
     wrapAction(() => api.deleteConfigEntity(schoolId, entityType, id, token));
   };
 
+  // ── School Settings State ──
+  const [schoolInfo, setSchoolInfo] = useState(null);
+  const [schoolForm, setSchoolForm] = useState({ name: '', working_days: [1,2,3,4,5], timezone: 'UTC' });
+
+  React.useEffect(() => {
+    api.getSchool(schoolId, token)
+      .then(s => {
+        setSchoolInfo(s);
+        setSchoolForm({
+          name: s.name || '',
+          working_days: s.working_days || [1,2,3,4,5],
+          timezone: s.timezone || 'UTC',
+        });
+      })
+      .catch(() => {});
+  }, [schoolId]);
+
   // ── Form State ──
   const [gradeForm, setGradeForm] = useState({ name: '', tier: 'PRIMARY', day_end_time: '15:00' });
+  const [editingGradeId, setEditingGradeId] = useState(null);
+  const [editGradeForm, setEditGradeForm] = useState({ name: '', tier: 'PRIMARY', day_end_time: '15:00' });
 
   // Classes: split into gradeId + section for clarity; combined on submit
   const [classGradeId, setClassGradeId] = useState('');
   const [classSection, setClassSection] = useState('');
+  const [editingClassId, setEditingClassId] = useState(null);
+  const [editClassForm, setEditClassForm] = useState({ name: '', grade_id: '' });
 
   const [subjectForm, setSubjectForm] = useState({ name: '', code: '', is_activity: false, weekly_frequency_default: 5 });
+  const [editingSubjectId, setEditingSubjectId] = useState(null);
+  const [editSubjectForm, setEditSubjectForm] = useState({ name: '', code: '', is_activity: false, weekly_frequency_default: 5 });
 
   const [teacherForm, setTeacherForm] = useState({ name: '', email: '', max_periods_per_day: 5, qualified_subject_ids: [] });
   const [editingTeacherId, setEditingTeacherId] = useState(null);
@@ -249,6 +274,45 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
   const [reqForm, setReqForm] = useState({ class_section_id: '', subject_id: '', weekly_frequency: 5 });
 
   const [abForm, setAbForm] = useState({ grade_tier: 'PRIMARY', day_of_week: 1, start_period: 1, end_period: 2, activity_types: [] });
+  const [editingAbId, setEditingAbId] = useState(null);
+  const [editAbForm, setEditAbForm] = useState({ grade_tier: 'PRIMARY', day_of_week: 1, start_period: 1, end_period: 2, activity_types: [] });
+
+  // ── Edit helpers ──
+  const startEditGrade = (g) => {
+    setEditingGradeId(g.id);
+    setEditGradeForm({ name: g.name, tier: g.tier, day_end_time: g.day_end_time });
+  };
+  const saveEditGrade = (id) => {
+    wrapAction(() => api.updateConfigEntity(schoolId, 'grades', id, editGradeForm, token));
+    setEditingGradeId(null);
+  };
+
+  const startEditClass = (c) => {
+    setEditingClassId(c.id);
+    setEditClassForm({ name: c.name, grade_id: c.grade_id });
+  };
+  const saveEditClass = (id) => {
+    wrapAction(() => api.updateConfigEntity(schoolId, 'classes', id, editClassForm, token));
+    setEditingClassId(null);
+  };
+
+  const startEditSubject = (s) => {
+    setEditingSubjectId(s.id);
+    setEditSubjectForm({ name: s.name, code: s.code, is_activity: s.is_activity, weekly_frequency_default: s.weekly_frequency_default });
+  };
+  const saveEditSubject = (id) => {
+    wrapAction(() => api.updateConfigEntity(schoolId, 'subjects', id, editSubjectForm, token));
+    setEditingSubjectId(null);
+  };
+
+  const startEditAb = (ab) => {
+    setEditingAbId(ab.id);
+    setEditAbForm({ grade_tier: ab.grade_tier, day_of_week: ab.day_of_week, start_period: ab.start_period, end_period: ab.end_period, activity_types: [...(ab.activity_types || [])] });
+  };
+  const saveEditAb = (id) => {
+    wrapAction(() => api.updateConfigEntity(schoolId, 'activity-blocks', id, editAbForm, token));
+    setEditingAbId(null);
+  };
 
   // Period structure
   const DEFAULT_PERIOD_ROWS = [
@@ -352,34 +416,64 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
           </tr>
         </thead>
         <tbody>
-          {(config?.grades || []).map(g => (
-            <tr key={g.id}>
-              <td style={{ fontWeight: 600 }}>{g.name}</td>
-              <td>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                  padding: '3px 12px', borderRadius: '12px',
-                  background: g.tier === 'PRIMARY' ? '#dbeafe' : '#ede9fe',
-                  color: g.tier === 'PRIMARY' ? '#1d4ed8' : '#7c3aed',
-                  fontSize: '0.8rem', fontWeight: 700,
-                }}>
-                  {g.tier === 'PRIMARY' ? '🔵' : '🟣'} {g.tier === 'PRIMARY' ? 'Primary' : 'Senior'}
-                </span>
-              </td>
-              <td style={{ fontWeight: 500 }}>
-                🕐 {g.day_end_time}
-                <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  ({g.tier === 'PRIMARY' ? 'shorter day' : 'full day'})
-                </span>
-              </td>
-              <td>
-                <button className="btn btn-secondary" style={{ color: 'var(--danger-color)', fontSize: '0.85rem', padding: '0.3rem 0.6rem' }}
-                  onClick={() => deleteEntity('grades', g.id)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
+          {(config?.grades || []).map(g =>
+            editingGradeId === g.id ? (
+              <tr key={g.id} style={{ background: '#f0f7ff' }}>
+                <td>
+                  <input className="input" style={{ width: '100%', minWidth: 120 }}
+                    value={editGradeForm.name}
+                    onChange={e => setEditGradeForm({ ...editGradeForm, name: e.target.value })} />
+                </td>
+                <td>
+                  <select className="select" style={{ width: '100%' }} value={editGradeForm.tier}
+                    onChange={e => setEditGradeForm({ ...editGradeForm, tier: e.target.value })}>
+                    <option value="PRIMARY">Primary</option>
+                    <option value="SENIOR">Senior</option>
+                  </select>
+                </td>
+                <td>
+                  <input type="time" className="input" style={{ width: 120 }} value={editGradeForm.day_end_time}
+                    onChange={e => setEditGradeForm({ ...editGradeForm, day_end_time: e.target.value })} />
+                </td>
+                <td>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button className="btn btn-primary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => saveEditGrade(g.id)}>Save</button>
+                    <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => setEditingGradeId(null)}>Cancel</button>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              <tr key={g.id}>
+                <td style={{ fontWeight: 600 }}>{g.name}</td>
+                <td>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                    padding: '3px 12px', borderRadius: '12px',
+                    background: g.tier === 'PRIMARY' ? '#dbeafe' : '#ede9fe',
+                    color: g.tier === 'PRIMARY' ? '#1d4ed8' : '#7c3aed',
+                    fontSize: '0.8rem', fontWeight: 700,
+                  }}>
+                    {g.tier === 'PRIMARY' ? '🔵' : '🟣'} {g.tier === 'PRIMARY' ? 'Primary' : 'Senior'}
+                  </span>
+                </td>
+                <td style={{ fontWeight: 500 }}>
+                  🕐 {g.day_end_time}
+                  <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    ({g.tier === 'PRIMARY' ? 'shorter day' : 'full day'})
+                  </span>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => startEditGrade(g)}>Edit</button>
+                    <button className="btn btn-secondary" style={{ color: 'var(--danger-color)', fontSize: '0.85rem', padding: '0.3rem 0.6rem' }}
+                      onClick={() => deleteEntity('grades', g.id)}>
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )
+          )}
           {(config?.grades || []).length === 0 && (
             <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem' }}>No grades yet — add one below.</td></tr>
           )}
@@ -476,7 +570,29 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
           <tbody>
             {(config?.classes || []).map(c => {
               const grade = gradesMap[c.grade_id];
-              return (
+              return editingClassId === c.id ? (
+                <tr key={c.id} style={{ background: '#f0f7ff' }}>
+                  <td>
+                    <input className="input" style={{ width: '100%', minWidth: 120 }}
+                      value={editClassForm.name}
+                      onChange={e => setEditClassForm({ ...editClassForm, name: e.target.value })} />
+                  </td>
+                  <td colSpan={2}>
+                    <select className="select" style={{ width: '100%' }} value={editClassForm.grade_id}
+                      onChange={e => setEditClassForm({ ...editClassForm, grade_id: parseInt(e.target.value) })}>
+                      {(config?.grades || []).map(g => (
+                        <option key={g.id} value={g.id}>{g.name} ({g.tier})</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      <button className="btn btn-primary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => saveEditClass(c.id)}>Save</button>
+                      <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => setEditingClassId(null)}>Cancel</button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
                 <tr key={c.id}>
                   <td style={{ fontWeight: 600 }}>{c.name}</td>
                   <td>{grade?.name ?? `#${c.grade_id}`}</td>
@@ -494,8 +610,10 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
                     ) : '—'}
                   </td>
                   <td>
-                    <button className="btn btn-secondary" style={{ color: 'var(--danger-color)', fontSize: '0.85rem', padding: '0.3rem 0.6rem' }}
-                      onClick={() => deleteEntity('classes', c.id)}>Delete</button>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => startEditClass(c)}>Edit</button>
+                      <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem', color: 'var(--danger-color)' }} onClick={() => deleteEntity('classes', c.id)}>Delete</button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -562,22 +680,44 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
           <tr><th>Name</th><th>Code</th><th>Activity?</th><th>Default Freq/Week</th><th>Action</th></tr>
         </thead>
         <tbody>
-          {(config?.subjects || []).map(s => (
-            <tr key={s.id}>
-              <td style={{ fontWeight: 500 }}>{s.name}</td>
-              <td><code style={{ background: '#f1f5f9', padding: '1px 6px', borderRadius: 4, fontSize: '0.85rem' }}>{s.code}</code></td>
-              <td style={{ textAlign: 'center' }}>
-                {s.is_activity
-                  ? <span style={{ padding: '2px 8px', borderRadius: 12, background: '#fef9c3', color: '#92400e', fontSize: '0.8rem', fontWeight: 600 }}>Activity</span>
-                  : <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>—</span>}
-              </td>
-              <td style={{ textAlign: 'center' }}>{s.weekly_frequency_default}</td>
-              <td>
-                <button className="btn btn-secondary" style={{ color: 'var(--danger-color)', fontSize: '0.85rem', padding: '0.3rem 0.6rem' }}
-                  onClick={() => deleteEntity('subjects', s.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
+          {(config?.subjects || []).map(s =>
+            editingSubjectId === s.id ? (
+              <tr key={s.id} style={{ background: '#f0f7ff' }}>
+                <td><input className="input" style={{ width: '100%', minWidth: 120 }} value={editSubjectForm.name} onChange={e => setEditSubjectForm({ ...editSubjectForm, name: e.target.value })} /></td>
+                <td><input className="input" style={{ width: 90 }} value={editSubjectForm.code} onChange={e => setEditSubjectForm({ ...editSubjectForm, code: e.target.value.toUpperCase() })} /></td>
+                <td style={{ textAlign: 'center' }}>
+                  <input type="checkbox" checked={editSubjectForm.is_activity} onChange={e => setEditSubjectForm({ ...editSubjectForm, is_activity: e.target.checked })} />
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  <input type="number" className="input" style={{ width: 70 }} min={0} max={10} value={editSubjectForm.weekly_frequency_default} onChange={e => setEditSubjectForm({ ...editSubjectForm, weekly_frequency_default: parseInt(e.target.value) || 0 })} />
+                </td>
+                <td>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button className="btn btn-primary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => saveEditSubject(s.id)}>Save</button>
+                    <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => setEditingSubjectId(null)}>Cancel</button>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              <tr key={s.id}>
+                <td style={{ fontWeight: 500 }}>{s.name}</td>
+                <td><code style={{ background: '#f1f5f9', padding: '1px 6px', borderRadius: 4, fontSize: '0.85rem' }}>{s.code}</code></td>
+                <td style={{ textAlign: 'center' }}>
+                  {s.is_activity
+                    ? <span style={{ padding: '2px 8px', borderRadius: 12, background: '#fef9c3', color: '#92400e', fontSize: '0.8rem', fontWeight: 600 }}>Activity</span>
+                    : <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>—</span>}
+                </td>
+                <td style={{ textAlign: 'center' }}>{s.weekly_frequency_default}</td>
+                <td>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => startEditSubject(s)}>Edit</button>
+                    <button className="btn btn-secondary" style={{ color: 'var(--danger-color)', fontSize: '0.85rem', padding: '0.3rem 0.6rem' }}
+                      onClick={() => deleteEntity('subjects', s.id)}>Delete</button>
+                  </div>
+                </td>
+              </tr>
+            )
+          )}
           {(config?.subjects || []).length === 0 && (
             <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem' }}>No subjects yet — add one below.</td></tr>
           )}
@@ -903,23 +1043,64 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
             <tr><th>Tier</th><th>Day</th><th>Start Period</th><th>End Period</th><th>Activity Types</th><th>Action</th></tr>
           </thead>
           <tbody>
-            {(config?.activity_blocks || []).map(ab => (
-              <tr key={ab.id}>
-                <td><span style={{ padding: '2px 8px', borderRadius: 12, background: ab.grade_tier === 'PRIMARY' ? '#dbeafe' : '#ede9fe', color: ab.grade_tier === 'PRIMARY' ? '#1d4ed8' : '#7c3aed', fontSize: '0.8rem', fontWeight: 600 }}>{ab.grade_tier === 'PRIMARY' ? '🔵 Primary' : '🟣 Senior'}</span></td>
-                <td>{['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'][ab.day_of_week] || ab.day_of_week}</td>
-                <td style={{ textAlign: 'center' }}>{ab.start_period}</td>
-                <td style={{ textAlign: 'center' }}>{ab.end_period}</td>
-                <td>
-                  {(ab.activity_types || []).map(code => (
-                    <code key={code} style={{ background: '#fef9c3', padding: '1px 6px', borderRadius: 4, marginRight: 4, fontSize: '0.8rem' }}>{code}</code>
-                  ))}
-                </td>
-                <td>
-                  <button className="btn btn-secondary" style={{ color: 'var(--danger-color)', fontSize: '0.85rem', padding: '0.3rem 0.6rem' }}
-                    onClick={() => deleteEntity('activity-blocks', ab.id)}>Delete</button>
-                </td>
-              </tr>
-            ))}
+            {(config?.activity_blocks || []).map(ab =>
+              editingAbId === ab.id ? (
+                <tr key={ab.id} style={{ background: '#f0f7ff' }}>
+                  <td>
+                    <select className="select" style={{ width: 130 }} value={editAbForm.grade_tier}
+                      onChange={e => setEditAbForm({ ...editAbForm, grade_tier: e.target.value })}>
+                      <option value="PRIMARY">PRIMARY</option>
+                      <option value="SENIOR">SENIOR</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select className="select" style={{ width: 110 }} value={editAbForm.day_of_week}
+                      onChange={e => setEditAbForm({ ...editAbForm, day_of_week: parseInt(e.target.value) })}>
+                      {[['1','Mon'],['2','Tue'],['3','Wed'],['4','Thu'],['5','Fri']].map(([v,l]) => (
+                        <option key={v} value={v}>{l}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <input type="number" className="input" style={{ width: 70 }} min={0} value={editAbForm.start_period}
+                      onChange={e => setEditAbForm({ ...editAbForm, start_period: parseInt(e.target.value) || 1 })} />
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <input type="number" className="input" style={{ width: 70 }} min={0} value={editAbForm.end_period}
+                      onChange={e => setEditAbForm({ ...editAbForm, end_period: parseInt(e.target.value) || 2 })} />
+                  </td>
+                  <td>
+                    <input className="input" style={{ width: 140 }} value={editAbForm.activity_types.join(',')}
+                      onChange={e => setEditAbForm({ ...editAbForm, activity_types: e.target.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean) })} />
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      <button className="btn btn-primary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => saveEditAb(ab.id)}>Save</button>
+                      <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => setEditingAbId(null)}>Cancel</button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={ab.id}>
+                  <td><span style={{ padding: '2px 8px', borderRadius: 12, background: ab.grade_tier === 'PRIMARY' ? '#dbeafe' : '#ede9fe', color: ab.grade_tier === 'PRIMARY' ? '#1d4ed8' : '#7c3aed', fontSize: '0.8rem', fontWeight: 600 }}>{ab.grade_tier === 'PRIMARY' ? '🔵 Primary' : '🟣 Senior'}</span></td>
+                  <td>{['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'][ab.day_of_week] || ab.day_of_week}</td>
+                  <td style={{ textAlign: 'center' }}>{ab.start_period}</td>
+                  <td style={{ textAlign: 'center' }}>{ab.end_period}</td>
+                  <td>
+                    {(ab.activity_types || []).map(code => (
+                      <code key={code} style={{ background: '#fef9c3', padding: '1px 6px', borderRadius: 4, marginRight: 4, fontSize: '0.8rem' }}>{code}</code>
+                    ))}
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      <button className="btn btn-secondary" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }} onClick={() => startEditAb(ab)}>Edit</button>
+                      <button className="btn btn-secondary" style={{ color: 'var(--danger-color)', fontSize: '0.85rem', padding: '0.3rem 0.6rem' }}
+                        onClick={() => deleteEntity('activity-blocks', ab.id)}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            )}
             {(config?.activity_blocks || []).length === 0 && (
               <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem' }}>No activity blocks yet.</td></tr>
             )}
@@ -1172,6 +1353,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
 
   // ── Tab badge helper ─────────────────────────────────────────────────────────
   const tabKeyMap = {
+    'School Settings': null,  // not a setup step
     'Grades':           'grades',
     'Classes':          'classes',
     'Subjects':         'subjects',
@@ -1182,6 +1364,86 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
   };
 
   const labelStyle = { fontSize: '0.78rem', fontWeight: 600, marginBottom: '0.25rem', display: 'block', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' };
+
+  const renderSchoolSettings = () => {
+    const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const DAY_NUMS  = [1, 2, 3, 4, 5, 6, 7];
+    const toggleDay = (d) => {
+      const cur = schoolForm.working_days || [];
+      setSchoolForm({
+        ...schoolForm,
+        working_days: cur.includes(d) ? cur.filter(x => x !== d) : [...cur, d].sort(),
+      });
+    };
+    return (
+      <div>
+        <h3 style={{ marginBottom: '0.4rem' }}>School Settings</h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+          Edit your school name, working days, and timezone. These settings affect timetable generation.
+        </p>
+        {schoolInfo && (
+          <div style={{ marginBottom: '1rem', padding: '0.6rem 1rem', background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: 8, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+            Subdomain: <strong>{schoolInfo.subdomain}</strong>
+            &nbsp;&middot;&nbsp;
+            ID: <strong>#{schoolInfo.id}</strong>
+          </div>
+        )}
+        <div style={{ background: '#f9fafb', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: 560 }}>
+          <div>
+            <label style={labelStyle}>School Name</label>
+            <input className="input" style={{ width: '100%' }} value={schoolForm.name}
+              onChange={e => setSchoolForm({ ...schoolForm, name: e.target.value })} />
+          </div>
+          <div>
+            <label style={labelStyle}>Working Days</label>
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+              {DAY_NUMS.map((d, i) => {
+                const active = (schoolForm.working_days || []).includes(d);
+                return (
+                  <button key={d} type="button"
+                    onClick={() => toggleDay(d)}
+                    style={{
+                      padding: '0.35rem 0.75rem', borderRadius: 6, border: '1px solid',
+                      background: active ? '#dbeafe' : '#f3f4f6',
+                      borderColor: active ? '#93c5fd' : '#e5e7eb',
+                      color: active ? '#1d4ed8' : '#6b7280',
+                      fontWeight: active ? 700 : 500, fontSize: '0.85rem', cursor: 'pointer',
+                      fontFamily: 'inherit',
+                    }}>
+                    {DAY_NAMES[i]}
+                  </button>
+                );
+              })}
+            </div>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>Click to toggle working days.</p>
+          </div>
+          <div>
+            <label style={labelStyle}>Timezone</label>
+            <input className="input" style={{ width: 220 }} value={schoolForm.timezone}
+              onChange={e => setSchoolForm({ ...schoolForm, timezone: e.target.value })} />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>e.g. Asia/Kolkata, America/New_York</p>
+          </div>
+          <div>
+            <button className="btn btn-primary"
+              onClick={() => {
+                setErrorMsg(null);
+                setSuccessMsg(null);
+                api.updateSchool(schoolId, schoolForm, token)
+                  .then(updated => {
+                    setSchoolInfo(updated);
+                    setSuccessMsg('School settings saved!');
+                    setTimeout(() => setSuccessMsg(null), 3000);
+                  })
+                  .catch(e => setErrorMsg(e.message));
+              }}>
+              Save Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', marginTop: '2rem' }}>
@@ -1230,6 +1492,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
         })}
       </div>
 
+      {activeTab === 'School Settings' && renderSchoolSettings()}
       {activeTab === 'Grades'           && renderGrades()}
       {activeTab === 'Classes'          && renderClasses()}
       {activeTab === 'Subjects'         && renderSubjects()}

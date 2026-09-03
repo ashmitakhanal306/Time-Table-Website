@@ -12,7 +12,7 @@ from backend.models import (
 )
 from backend.schemas import (
     LoginRequest, Token, SchoolResponse, GenerateResponse, OverrideRequest, AssignAbsenceRequest,
-    SchoolCreateRequest, GradeLevelCreate, GradeLevelUpdate, ClassSectionCreate, ClassSectionUpdate,
+    SchoolCreateRequest, SchoolUpdateRequest, GradeLevelCreate, GradeLevelUpdate, ClassSectionCreate, ClassSectionUpdate,
     SubjectCreate, SubjectUpdate, TeacherCreate, TeacherUpdate, ClassSubjectRequirementCreate, ClassSubjectRequirementUpdate,
     ActivityBlockCreate, ActivityBlockUpdate, PeriodStructureRequest
 )
@@ -56,6 +56,26 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
 @app.get("/api/schools", response_model=list[SchoolResponse])
 def list_schools(db: Session = Depends(get_db)):
     return db.query(School).all()
+
+@app.get("/api/schools/{school_id}", response_model=SchoolResponse)
+def get_school(school_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_school_access(school_id, user)
+    school = db.query(School).filter_by(id=school_id).first()
+    if not school:
+        raise HTTPException(404, "School not found")
+    return school
+
+@app.put("/api/schools/{school_id}", response_model=SchoolResponse)
+def update_school(school_id: int, req: SchoolUpdateRequest, db: Session = Depends(get_db), user: User = Depends(require_role("ADMIN"))):
+    require_school_access(school_id, user)
+    school = db.query(School).filter_by(id=school_id).first()
+    if not school:
+        raise HTTPException(404, "School not found")
+    for k, v in req.dict(exclude_unset=True).items():
+        setattr(school, k, v)
+    db.commit()
+    db.refresh(school)
+    return school
 
 @app.post("/api/schools", response_model=SchoolResponse)
 def create_school(req: SchoolCreateRequest, db: Session = Depends(get_db)):

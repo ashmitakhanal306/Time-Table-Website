@@ -13,9 +13,18 @@ class SchoolResponse(BaseModel):
     id: int
     name: str
     subdomain: str
-    
+    timezone: Optional[str] = None
+    working_days: Optional[List[int]] = None
+    terms: Optional[Any] = None
+
     class Config:
         from_attributes = True
+
+class SchoolUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    working_days: Optional[List[int]] = None
+    terms: Optional[Any] = None
+    timezone: Optional[str] = None
 
 class GenerateResponse(BaseModel):
     status: str
