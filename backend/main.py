@@ -5,9 +5,9 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 import io
 
-from backend.database import get_db
+from backend.database import get_db, engine
 from backend.models import (
-    User, School, GradeLevel, ClassSection, Subject, Teacher, 
+    Base, User, School, GradeLevel, ClassSection, Subject, Teacher, 
     PeriodSlot, ActivityBlock, TimetableEntry, TeacherAbsence, ClassSubjectRequirement
 )
 from backend.schemas import (
@@ -22,6 +22,10 @@ from backend.solver.timetable_solver import generate_timetable
 from backend.solver.substitute_solver import get_substitute_recommendations
 
 app = FastAPI(title="School Timetable System")
+
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,4 +1,7 @@
 // src/api.js
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const apiUrl = (path) => `${API_BASE}${path}`;
+
 const getHeaders = (token, isJson = true) => {
   const headers = {};
   if (isJson) {
@@ -26,7 +29,7 @@ const handleResponse = async (res) => {
 
 export const api = {
   login: async (email, password) => {
-    const res = await fetch('/api/auth/login', {
+    const res = await fetch(apiUrl('/api/auth/login'), {
       method: 'POST',
       headers: getHeaders(null),
       body: JSON.stringify({ email, password }),
@@ -35,12 +38,12 @@ export const api = {
   },
   
   listSchools: async () => {
-    const res = await fetch('/api/schools');
+    const res = await fetch(apiUrl('/api/schools'));
     return handleResponse(res);
   },
   
   createSchool: async (schoolData) => {
-    const res = await fetch('/api/schools', {
+    const res = await fetch(apiUrl('/api/schools'), {
       method: 'POST',
       headers: getHeaders(null),
       body: JSON.stringify(schoolData),
@@ -49,14 +52,14 @@ export const api = {
   },
 
   getSchool: async (schoolId, token) => {
-    const res = await fetch(`/api/schools/${schoolId}`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}`), {
       headers: getHeaders(token),
     });
     return handleResponse(res);
   },
 
   updateSchool: async (schoolId, data, token) => {
-    const res = await fetch(`/api/schools/${schoolId}`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}`), {
       method: 'PUT',
       headers: getHeaders(token),
       body: JSON.stringify(data),
@@ -65,7 +68,7 @@ export const api = {
   },
 
   createConfigEntity: async (schoolId, entityType, data, token) => {
-    const res = await fetch(`/api/schools/${schoolId}/${entityType}`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/${entityType}`), {
       method: 'POST',
       headers: getHeaders(token),
       body: JSON.stringify(data),
@@ -74,7 +77,7 @@ export const api = {
   },
 
   updateConfigEntity: async (schoolId, entityType, id, data, token) => {
-    const res = await fetch(`/api/schools/${schoolId}/${entityType}/${id}`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/${entityType}/${id}`), {
       method: 'PUT',
       headers: getHeaders(token),
       body: JSON.stringify(data),
@@ -83,7 +86,7 @@ export const api = {
   },
 
   deleteConfigEntity: async (schoolId, entityType, id, token) => {
-    const res = await fetch(`/api/schools/${schoolId}/${entityType}/${id}`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/${entityType}/${id}`), {
       method: 'DELETE',
       headers: getHeaders(token),
     });
@@ -91,7 +94,7 @@ export const api = {
   },
 
   updatePeriodStructure: async (schoolId, data, token) => {
-    const res = await fetch(`/api/schools/${schoolId}/period-structure`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/period-structure`), {
       method: 'POST',
       headers: getHeaders(token),
       body: JSON.stringify(data),
@@ -100,14 +103,14 @@ export const api = {
   },
   
   getConfig: async (schoolId, token) => {
-    const res = await fetch(`/api/schools/${schoolId}/config`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/config`), {
       headers: getHeaders(token),
     });
     return handleResponse(res);
   },
   
   generateTimetable: async (schoolId, token) => {
-    const res = await fetch(`/api/schools/${schoolId}/timetable/generate`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/timetable/generate`), {
       method: 'POST',
       headers: getHeaders(token),
     });
@@ -120,7 +123,7 @@ export const api = {
     if (teacherId) params.append('teacher_id', teacherId);
     
     const qs = params.toString();
-    const url = `/api/schools/${schoolId}/timetable/entries` + (qs ? `?${qs}` : '');
+    const url = apiUrl(`/api/schools/${schoolId}/timetable/entries` + (qs ? `?${qs}` : ''));
     
     const res = await fetch(url, {
       headers: getHeaders(token),
@@ -129,7 +132,7 @@ export const api = {
   },
   
   overrideEntry: async (schoolId, entryId, overrideData, token) => {
-    const res = await fetch(`/api/schools/${schoolId}/timetable/entries/${entryId}`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/timetable/entries/${entryId}`), {
       method: 'PATCH',
       headers: getHeaders(token),
       body: JSON.stringify(overrideData),
@@ -138,7 +141,7 @@ export const api = {
   },
   
   publishTimetable: async (schoolId, publish, token) => {
-    const res = await fetch(`/api/schools/${schoolId}/timetable/publish?publish=${publish}`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/timetable/publish?publish=${publish}`), {
       method: 'POST',
       headers: getHeaders(token),
     });
@@ -147,14 +150,14 @@ export const api = {
   
   recommendSubstitutes: async (schoolId, teacherId, date, period, token) => {
     const params = new URLSearchParams({ teacher_id: teacherId, date, period });
-    const res = await fetch(`/api/schools/${schoolId}/substitutions/recommend?${params.toString()}`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/substitutions/recommend?${params.toString()}`), {
       headers: getHeaders(token),
     });
     return handleResponse(res);
   },
   
   assignSubstitute: async (schoolId, assignmentData, token) => {
-    const res = await fetch(`/api/schools/${schoolId}/substitutions/assign`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/substitutions/assign`), {
       method: 'POST',
       headers: getHeaders(token),
       body: JSON.stringify(assignmentData),
@@ -163,7 +166,7 @@ export const api = {
   },
   
   downloadExport: async (schoolId, kind, token) => {
-    const res = await fetch(`/api/schools/${schoolId}/export/${kind}`, {
+    const res = await fetch(apiUrl(`/api/schools/${schoolId}/export/${kind}`), {
       headers: getHeaders(token, false),
     });
     if (!res.ok) {
