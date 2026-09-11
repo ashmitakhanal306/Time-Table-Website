@@ -15,12 +15,14 @@ const getHeaders = (token, isJson = true) => {
 
 const handleResponse = async (res) => {
   if (!res.ok) {
-    let detail = 'An error occurred';
+    let detail = `Server returned status ${res.status}`;
     try {
       const data = await res.json();
       detail = data.detail || detail;
     } catch (e) {
-      // Not JSON
+      if (res.status === 405 || res.status === 404) {
+        detail = 'Backend API not reachable. Check server connection or VITE_API_URL setting.';
+      }
     }
     throw new Error(detail);
   }

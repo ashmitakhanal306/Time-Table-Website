@@ -3,8 +3,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from backend.models import Base
 
-# By default, use SQLite in the current directory if DATABASE_URL is not set
-DB_PATH = os.path.join(os.path.dirname(__file__), "timetable.db")
+# By default, use SQLite in the current directory (or /tmp on Vercel/serverless)
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    DB_PATH = "/tmp/timetable.db"
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "timetable.db")
+
 raw_db_url = os.environ.get("DATABASE_URL", f"sqlite:///{DB_PATH}")
 if raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
