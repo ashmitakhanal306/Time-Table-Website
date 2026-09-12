@@ -208,7 +208,7 @@ export default function AdminPortal({ schoolId, token }) {
     setSubError(null);
     try {
       const candidates = await api.recommendSubstitutes(schoolId, subAbsentTeacher, subDate, subPeriod, token);
-      setSubCandidates(candidates);
+      setSubCandidates(Array.isArray(candidates) ? candidates : (candidates?.recommendations || []));
     } catch(e) {
       setSubError(e.message);
     }
@@ -448,7 +448,7 @@ export default function AdminPortal({ schoolId, token }) {
           {subError && <div className="error-banner">{subError}</div>}
           
           <div className="candidates-list">
-            {subCandidates.map((c, i) => (
+            {(Array.isArray(subCandidates) ? subCandidates : []).map((c, i) => (
               <div key={c.teacher_id} className={`sub-candidate ${i === 0 ? 'top-pick' : ''}`}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                   <div style={{ fontWeight: 600 }}>{c.teacher_name} {i === 0 && '(Top Pick)'}</div>

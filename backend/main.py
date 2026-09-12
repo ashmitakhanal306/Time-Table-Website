@@ -2,8 +2,10 @@ from fastapi import FastAPI, Depends, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from datetime import timedelta
+from datetime import datetime, timedelta
 import io
+import os
+
 
 from backend.database import get_db, engine, SessionLocal
 from backend.models import (
@@ -38,9 +40,18 @@ def on_startup():
     except Exception as e:
         print(f"[Startup] Error checking/seeding database: {e}")
 
+# CORS: In production set CORS_ORIGINS to a comma-separated list of allowed origins
+# e.g. "https://myapp.vercel.app" — defaults to wildcard for local dev.
+_cors_env = os.environ.get("CORS_ORIGINS", "*")
+_cors_origins: list[str] = (
+    [o.strip() for o in _cors_env.split(",") if o.strip()]
+    if _cors_env != "*"
+    else ["*"]
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -403,6 +414,73 @@ def get_timetable_entries(
         query = query.filter(TimetableEntry.teacher_id == teacher_id)
         
     return [e.__dict__ for e in query.all()]
+
+@app.get("/api/schools/{school_id}/timetable/effective")
+def get_effective_timetable(
+    school_id: int, 
+    date: str = Query(..., description="Date in YYYY-MM-DD format"),
+    class_id: int = None, 
+    teacher_id: int = None, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(get_current_user)
+):
+    require_school_access(school_id, user)
+    
+    # Enforce role scoping
+    if user.role == "TEACHER":
+        teacher_id = user.linked_teacher_id
+    elif user.role == "STUDENT":
+        class_id = user.linked_class_section_id
+
+    try:
+        dt = datetime.strptime(date, "%Y-%m-%d")
+        day_of_week = dt.isoweekday()  # 1 = Monday, 7 = Sunday
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Expected YYYY-MM-DD.")
+        
+    query = db.query(TimetableEntry).filter_by(school_id=school_id, day_of_week=day_of_week)
+    if class_id is not None:
+        query = query.filter(TimetableEntry.class_section_id == class_id)
+        
+    recurring_entries = query.all()
+    
+    # Fetch TeacherAbsence rows for that exact date with substitute assigned
+    absences = db.query(TeacherAbsence).filter_by(school_id=school_id, date=date).all()
+    absence_map = {}
+    for a in absences:
+        if a.substitute_teacher_id is not None:
+            absence_map[(a.teacher_id, a.period_number)] = a
+            
+    effective_entries = []
+    for e in recurring_entries:
+        entry_dict = {
+            "id": e.id,
+            "school_id": e.school_id,
+            "class_section_id": e.class_section_id,
+            "day_of_week": e.day_of_week,
+            "period_number": e.period_number,
+            "subject_id": e.subject_id,
+            "teacher_id": e.teacher_id,
+            "room_name": e.room_name,
+            "is_manual_override": e.is_manual_override,
+            "is_published": e.is_published,
+            "is_substituted": False,
+            "original_teacher_id": None,
+        }
+        
+        key = (e.teacher_id, e.period_number)
+        if key in absence_map:
+            absence = absence_map[key]
+            entry_dict["original_teacher_id"] = e.teacher_id
+            entry_dict["teacher_id"] = absence.substitute_teacher_id
+            entry_dict["is_substituted"] = True
+            
+        effective_entries.append(entry_dict)
+        
+    if teacher_id is not None:
+        effective_entries = [e for e in effective_entries if e["teacher_id"] == teacher_id]
+        
+    return effective_entries
 
 @app.patch("/api/schools/{school_id}/timetable/entries/{entry_id}")
 def update_timetable_entry(

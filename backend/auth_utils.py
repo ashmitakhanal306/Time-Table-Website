@@ -1,8 +1,9 @@
+import os
 import bcrypt
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 
-SECRET_KEY = "supersecretkey" # Ideally from environment variables
+SECRET_KEY = os.environ.get("SECRET_KEY", "supersecretkey-dev-only-change-in-prod")
 ALGORITHM = "HS256"
 
 def hash_password(password: str) -> str:

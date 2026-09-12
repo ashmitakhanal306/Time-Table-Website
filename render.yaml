@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: school-timetable-backend
+    runtime: python
+    # Build: install from backend/requirements.txt
+    buildCommand: pip install -r backend/requirements.txt
+    # Start: uvicorn uses $PORT injected by Render (default 10000)
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: school-timetable-db
+          property: connectionString
+      # Render auto-generates a cryptographically secure random value for this key
+      - key: SECRET_KEY
+        generateValue: true
+      # After first deploy, update this to your actual Vercel frontend URL
+      # e.g. https://time-table-website.vercel.app
+      # Multiple origins: comma-separate them, e.g. "https://app.vercel.app,https://custom-domain.com"
+      - key: CORS_ORIGINS
+        value: https://time-table-website.vercel.app
+      # Python path so `backend.` imports resolve correctly
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+
+databases:
+  - name: school-timetable-db
+    databaseName: school_timetable
+    plan: free

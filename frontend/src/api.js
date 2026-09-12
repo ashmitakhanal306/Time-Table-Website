@@ -252,6 +252,50 @@ export const api = {
       return demoState.entries;
     }
   },
+
+  getEffectiveTimetable: async (schoolId, date, classId = null, teacherId = null, token = null) => {
+    if (isDemoMode) {
+      let dayOfWeek = 1;
+      if (date) {
+        const dt = new Date(date + 'T00:00:00');
+        dayOfWeek = dt.getDay() === 0 ? 7 : dt.getDay();
+      }
+      let dayEntries = demoState.entries.filter(e => e.day_of_week === dayOfWeek);
+      if (classId) {
+        dayEntries = dayEntries.filter(e => e.class_section_id === parseInt(classId));
+      }
+      const absences = (demoState.absences || []).filter(a => a.date === date && a.substitute_teacher_id);
+      const absMap = {};
+      absences.forEach(a => {
+        absMap[`${a.teacher_id}-${a.period_number}`] = a;
+      });
+
+      let effective = dayEntries.map(e => {
+        const copy = { ...e, is_substituted: false, original_teacher_id: null };
+        const key = `${e.teacher_id}-${e.period_number}`;
+        if (absMap[key]) {
+          copy.original_teacher_id = e.teacher_id;
+          copy.teacher_id = absMap[key].substitute_teacher_id;
+          copy.is_substituted = true;
+        }
+        return copy;
+      });
+
+      if (teacherId) {
+        effective = effective.filter(e => e.teacher_id === parseInt(teacherId));
+      }
+      return effective;
+    }
+    const params = new URLSearchParams({ date });
+    if (classId) params.append('class_id', classId);
+    if (teacherId) params.append('teacher_id', teacherId);
+
+    const url = apiUrl(`/api/schools/${schoolId}/timetable/effective?${params.toString()}`);
+    const res = await fetch(url, {
+      headers: getHeaders(token),
+    });
+    return await handleResponse(res);
+  },
   
   overrideEntry: async (schoolId, entryId, overrideData, token) => {
     if (isDemoMode) {
@@ -281,24 +325,31 @@ export const api = {
   
   recommendSubstitutes: async (schoolId, teacherId, date, period, token) => {
     if (isDemoMode) {
-      return {
-        recommendations: demoState.teachers.slice(0, 3).map(t => ({
-          teacher_id: t.id,
-          teacher_name: t.name,
-          score: 95,
-          reason: "Free during this period"
-        }))
-      };
+      return demoState.teachers.slice(0, 3).map(t => ({
+        teacher_id: t.id,
+        teacher_name: t.name,
+        free_periods_today: 3,
+        total_periods_this_week: 15,
+        qualified: true,
+        reason: "Free during this period"
+      }));
     }
     const params = new URLSearchParams({ teacher_id: teacherId, date, period });
     const res = await fetch(apiUrl(`/api/schools/${schoolId}/substitutions/recommend?${params.toString()}`), {
       headers: getHeaders(token),
     });
-    return handleResponse(res);
+    const data = await handleResponse(res);
+    return Array.isArray(data) ? data : (data.recommendations || []);
   },
   
   assignSubstitute: async (schoolId, assignmentData, token) => {
     if (isDemoMode) {
+      demoState.absences = demoState.absences || [];
+      demoState.absences.push({
+        id: Date.now(),
+        school_id: schoolId,
+        ...assignmentData
+      });
       return { status: "assigned", ...assignmentData };
     }
     const res = await fetch(apiUrl(`/api/schools/${schoolId}/substitutions/assign`), {

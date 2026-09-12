@@ -10,10 +10,20 @@ const DAYS = [
   { id: 5, name: 'Friday' },
 ];
 
+const getTodayStr = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function TeacherPortal({ schoolId, token }) {
   const [config, setConfig] = useState(null);
   const [entries, setEntries] = useState([]);
   const [selectedTeacherId, setSelectedTeacherId] = useState('');
+  const [selectedDate, setSelectedDate] = useState(getTodayStr());
+  const [viewMode, setViewMode] = useState('day'); // 'day' | 'week'
   const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
@@ -26,7 +36,7 @@ export default function TeacherPortal({ schoolId, token }) {
     } else {
       setEntries([]);
     }
-  }, [selectedTeacherId]);
+  }, [selectedTeacherId, selectedDate, viewMode]);
 
   const loadConfig = async () => {
     try {
@@ -42,12 +52,36 @@ export default function TeacherPortal({ schoolId, token }) {
 
   const loadEntries = async () => {
     try {
-      const data = await api.getEntries(schoolId, null, selectedTeacherId, token);
-      setEntries(data);
+      setErrorMsg(null);
+      if (viewMode === 'day') {
+        const data = await api.getEffectiveTimetable(schoolId, selectedDate, null, selectedTeacherId, token);
+        setEntries(data || []);
+      } else {
+        const data = await api.getEntries(schoolId, null, selectedTeacherId, token);
+        setEntries(data || []);
+      }
     } catch (e) {
       setErrorMsg('Failed to load entries: ' + e.message);
     }
   };
+
+  const shiftDate = (days) => {
+    const dt = new Date(selectedDate + 'T00:00:00');
+    dt.setDate(dt.getDate() + days);
+    const year = dt.getFullYear();
+    const month = String(dt.getMonth() + 1).padStart(2, '0');
+    const day = String(dt.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
+  };
+
+  const activeDayInfo = useMemo(() => {
+    if (!selectedDate) return { id: 1, name: 'Monday' };
+    const dt = new Date(selectedDate + 'T00:00:00');
+    const jsDay = dt.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+    const isoDay = jsDay === 0 ? 7 : jsDay;
+    const dayObj = DAYS.find(d => d.id === isoDay) || { id: isoDay, name: dt.toLocaleDateString('en-US', { weekday: 'long' }) };
+    return dayObj;
+  }, [selectedDate]);
 
   // Maps
   const subjectsById = useMemo(() => {
@@ -78,10 +112,13 @@ export default function TeacherPortal({ schoolId, token }) {
   const workloadByDay = useMemo(() => {
     const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     entries.forEach(e => {
-      // We only count actual entries, not breaks
       counts[e.day_of_week] = (counts[e.day_of_week] || 0) + 1;
     });
     return counts;
+  }, [entries]);
+
+  const substitutedCount = useMemo(() => {
+    return entries.filter(e => e.is_substituted).length;
   }, [entries]);
 
   if (!config) return <div>Loading config...</div>;
@@ -91,14 +128,18 @@ export default function TeacherPortal({ schoolId, token }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h2>Teacher Portal</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h2 style={{ margin: 0 }}>Teacher Portal</h2>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button className="btn btn-secondary" onClick={() => api.downloadExport(schoolId, 'excel', token)}>Export Excel</button>
+          <button className="btn btn-secondary" onClick={() => api.downloadExport(schoolId, 'pdf', token)}>Export PDF</button>
+        </div>
       </div>
 
       {errorMsg && <div className="error-banner">{errorMsg}</div>}
 
-      <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <label style={{ fontWeight: 500 }}>View As (Teacher):</label>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <label style={{ fontWeight: 600 }}>View As (Teacher):</label>
         <select 
           className="select" 
           style={{ width: '250px' }} 
@@ -111,7 +152,49 @@ export default function TeacherPortal({ schoolId, token }) {
         </select>
       </div>
 
-      {selectedTeacher && (
+      {/* Date-Aware Controls */}
+      <div className="date-controls-bar">
+        <div className="date-picker-group">
+          <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>Schedule Date:</label>
+          <input 
+            type="date" 
+            className="input" 
+            style={{ width: '160px', padding: '0.35rem 0.6rem' }} 
+            value={selectedDate} 
+            onChange={e => setSelectedDate(e.target.value)} 
+          />
+          <button className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }} onClick={() => shiftDate(-1)} title="Previous Day">◀ Prev</button>
+          <button className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }} onClick={() => setSelectedDate(getTodayStr())}>Today</button>
+          <button className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }} onClick={() => shiftDate(1)} title="Next Day">Next ▶</button>
+          <span className="date-day-badge">{activeDayInfo.name}</span>
+        </div>
+        
+        <div className="view-mode-toggle">
+          <button 
+            className={`view-mode-btn ${viewMode === 'day' ? 'active' : ''}`}
+            onClick={() => setViewMode('day')}
+          >
+            📅 Day Schedule (Date-Aware)
+          </button>
+          <button 
+            className={`view-mode-btn ${viewMode === 'week' ? 'active' : ''}`}
+            onClick={() => setViewMode('week')}
+          >
+            🗓️ Full Week Template
+          </button>
+        </div>
+      </div>
+
+      {viewMode === 'day' && substitutedCount > 0 && (
+        <div className="substitution-alert-box">
+          <span style={{ fontSize: '1.25rem' }}>🔄</span>
+          <div>
+            <strong>Substitution Active Today ({activeDayInfo.name}, {selectedDate}):</strong> You are assigned as a substitute teacher for {substitutedCount} period(s) marked in orange below.
+          </div>
+        </div>
+      )}
+
+      {selectedTeacher && viewMode === 'week' && (
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
           {DAYS.map(day => {
             const count = workloadByDay[day.id] || 0;
@@ -138,15 +221,21 @@ export default function TeacherPortal({ schoolId, token }) {
 
       {entries.length === 0 && !errorMsg ? (
         <div style={{ padding: '2rem', textAlign: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          No timetable published yet.
+          {viewMode === 'day' 
+            ? `No scheduled periods for ${selectedTeacher?.name || 'teacher'} on ${activeDayInfo.name} (${selectedDate}).` 
+            : 'No timetable published yet.'}
         </div>
       ) : (
         <TimetableGrid 
           periodSlots={periodSlots}
           entries={entries}
           subjectsById={subjectsById}
+          teachersById={teachersById}
           activityBlock={null} // Teachers don't see class-specific activity block styling here
           onCellClick={null}   // Read-only
+          viewDate={viewMode === 'day' ? selectedDate : null}
+          activeDayId={activeDayInfo.id}
+          singleDay={viewMode === 'day'}
           metaLabel={(entry) => classesById[entry.class_section_id]?.name || 'Unknown Class'}
         />
       )}

@@ -6,4 +6,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["sh", "-c", "python -m backend.seed && uvicorn backend.main:app --host 0.0.0.0 --port 8000"]
+# Note: seeding is handled by on_startup in main.py (only seeds if DB is empty)
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -317,3 +317,121 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--primary-color);
   background-color: #f0fdf4; /* subtle green */
 }
+
+/* ── Substituted Cell & Date-Aware Controls ────────────────────────────────── */
+.cell.cell-substituted {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
+  border: 2px solid #f97316 !important;
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.2);
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cell.cell-substituted:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3);
+}
+
+.substitute-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #ea580c;
+  color: white;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.25rem;
+  align-self: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.substitute-badge .badge-icon {
+  font-size: 0.75rem;
+}
+
+.substitute-note {
+  font-size: 0.72rem;
+  font-style: italic;
+  color: #9a3412;
+  font-weight: 600;
+  margin-top: 0.1rem;
+}
+
+.date-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.date-picker-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.date-day-badge {
+  background: var(--academic-color);
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--academic-border);
+}
+
+.view-mode-toggle {
+  display: inline-flex;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.view-mode-btn {
+  padding: 0.35rem 0.85rem;
+  border: none;
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+
+.view-mode-btn.active {
+  background: white;
+  color: var(--primary-color);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.active-day-col {
+  background-color: #eff6ff !important;
+}
+
+.substitution-alert-box {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-left: 4px solid #f97316;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #9a3412;
+}
+

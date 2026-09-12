@@ -14,7 +14,11 @@ export default function TimetableGrid({
   subjectsById,
   metaLabel,
   activityBlock,
-  onCellClick
+  onCellClick,
+  teachersById,
+  viewDate,
+  activeDayId,
+  singleDay = false
 }) {
   if (!periodSlots || periodSlots.length === 0) return <div>No period slots available for this tier.</div>;
 
@@ -23,6 +27,10 @@ export default function TimetableGrid({
   entries.forEach(e => {
     entryMap[`${e.day_of_week}-${e.period_number}`] = e;
   });
+
+  const daysToRender = singleDay && activeDayId
+    ? DAYS.filter(d => d.id === activeDayId)
+    : DAYS;
 
   const isActivitySlot = (day, period) => {
     if (!activityBlock) return false;
@@ -50,6 +58,10 @@ export default function TimetableGrid({
           <div className="legend-box" style={{ background: 'var(--activity-color)', border: '1px solid var(--activity-border)' }}></div>
           <span>Activity Subject</span>
         </div>
+        <div className="legend-item">
+          <div className="legend-box" style={{ background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)', border: '2px solid #f97316' }}></div>
+          <span style={{ fontWeight: 600, color: '#9a3412' }}>Substituted Class</span>
+        </div>
       </div>
 
       <div className="timetable-wrapper">
@@ -57,7 +69,21 @@ export default function TimetableGrid({
           <thead>
             <tr>
               <th>Time</th>
-              {DAYS.map(d => <th key={d.id}>{d.name}</th>)}
+              {daysToRender.map(d => (
+                <th key={d.id} className={activeDayId === d.id ? 'active-day-col' : ''}>
+                  <div>{d.name}</div>
+                  {viewDate && (
+                    <div style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-secondary)' }}>
+                      {viewDate}
+                    </div>
+                  )}
+                  {!singleDay && activeDayId === d.id && !viewDate && (
+                    <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--primary-color)' }}>
+                      ● Active Day
+                    </div>
+                  )}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -70,10 +96,11 @@ export default function TimetableGrid({
                   </div>
                 </td>
                 
-                {DAYS.map(day => {
+                {daysToRender.map(day => {
+                  const isDayColActive = activeDayId === day.id;
                   if (slot.is_break) {
                     return (
-                      <td key={`${day.id}-${slot.period_number}`} className="cell break-row">
+                      <td key={`${day.id}-${slot.period_number}`} className={`cell break-row ${isDayColActive && !singleDay ? 'active-day-col' : ''}`}>
                         {slot.slot_type}
                       </td>
                     );
@@ -87,17 +114,43 @@ export default function TimetableGrid({
                   if (entry) {
                     const subject = subjectsById[entry.subject_id];
                     cellClass = subject?.is_activity ? "cell activity" : "cell academic";
+                    
+                    if (entry.is_substituted) {
+                      cellClass += " cell-substituted";
+                    } else if (isDayColActive && !singleDay) {
+                      cellClass += " active-day-col";
+                    }
+
+                    const originalTeacher = entry.original_teacher_id && teachersById ? teachersById[entry.original_teacher_id] : null;
+                    const currentTeacher = entry.teacher_id && teachersById ? teachersById[entry.teacher_id] : null;
+                    const tooltipText = entry.is_substituted
+                      ? `Substitute: ${currentTeacher?.name || 'Assigned substitute'}, normally ${originalTeacher?.name || 'original teacher'}`
+                      : undefined;
+
                     content = (
-                      <>
+                      <div title={tooltipText} style={{ width: '100%' }}>
+                        {entry.is_substituted && (
+                          <div className="substitute-badge">
+                            <span className="badge-icon">🔄</span>
+                            <span>SUBSTITUTE</span>
+                          </div>
+                        )}
                         <div style={{ fontWeight: 600 }}>{subject?.name || 'Unknown'}</div>
                         <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
                           {metaLabel(entry)}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        {entry.is_substituted && originalTeacher && (
+                          <div className="substitute-note">
+                            (normally {originalTeacher.name})
+                          </div>
+                        )}
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
                           {entry.room_name}
                         </div>
-                      </>
+                      </div>
                     );
+                  } else if (isDayColActive && !singleDay) {
+                    cellClass += " active-day-col";
                   }
 
                   if (inBlock) {
