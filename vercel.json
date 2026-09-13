@@ -7,12 +7,9 @@
       "destination": "/index.html"
     }
   ],
-  "env": {
-    "VITE_API_URL": "@vite_api_url"
-  },
   "build": {
     "env": {
-      "VITE_API_URL": "@vite_api_url"
+      "VITE_API_URL": "https://school-timetable-backend.onrender.com"
     }
   }
 }
