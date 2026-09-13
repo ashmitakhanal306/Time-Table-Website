@@ -29,9 +29,8 @@ app = FastAPI(title="School Timetable System")
 def on_startup():
     import threading
     def _init():
-        
-        Base.metadata.create_all(bind=engine)
         try:
+            Base.metadata.create_all(bind=engine)
             db = SessionLocal()
             try:
                 if db.query(User).count() == 0:
@@ -40,11 +39,10 @@ def on_startup():
                     seed()
             finally:
                 db.close()
-                    
         except Exception as e:
-            
-            threading.Thread(target=_init, daemon=True).start()
             print(f"[Startup] Error checking/seeding database: {e}")
+    # Run DB init in a background thread so Render's health probe isn't blocked
+    threading.Thread(target=_init, daemon=True).start()
 
 # CORS: In production set CORS_ORIGINS to a comma-separated list of allowed origins
 # e.g. "https://myapp.vercel.app" — defaults to wildcard for local dev.
