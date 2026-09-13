@@ -27,18 +27,24 @@ app = FastAPI(title="School Timetable System")
 
 @app.on_event("startup")
 def on_startup():
-    Base.metadata.create_all(bind=engine)
-    try:
-        db = SessionLocal()
+    import threading
+    def _init():
+        
+        Base.metadata.create_all(bind=engine)
         try:
-            if db.query(User).count() == 0:
-                print("[Startup] Empty database detected. Seeding initial data...")
-                from backend.seed import seed
-                seed()
-        finally:
-            db.close()
-    except Exception as e:
-        print(f"[Startup] Error checking/seeding database: {e}")
+            db = SessionLocal()
+            try:
+                if db.query(User).count() == 0:
+                    print("[Startup] Empty database detected. Seeding initial data...")
+                    from backend.seed import seed
+                    seed()
+            finally:
+                db.close()
+                    
+        except Exception as e:
+            
+            threading.Thread(target=_init, daemon=True).start()
+            print(f"[Startup] Error checking/seeding database: {e}")
 
 # CORS: In production set CORS_ORIGINS to a comma-separated list of allowed origins
 # e.g. "https://myapp.vercel.app" — defaults to wildcard for local dev.
