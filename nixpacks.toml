@@ -1,8 +1,2 @@
-[phases.setup]
-nixPkgs = ["python311", "gcc", "libstdc++"]
-
-[phases.install]
-cmds = ["pip install -r backend/requirements.txt"]
-
-[start]
-cmd = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+# Railway will auto-detect the root Dockerfile and use it.
+# This file kept for reference only.
