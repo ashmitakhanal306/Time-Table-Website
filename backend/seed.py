@@ -13,8 +13,7 @@ def calculate_times(period_number, duration_minutes=45, start_hour=8, start_minu
     return start_time, end_time
 
 def seed():
-    # Drop and recreate tables to ensure clean state
-    Base.metadata.drop_all(bind=engine)
+    # Ensure tables exist without dropping existing connections
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
@@ -257,16 +256,28 @@ def seed():
     admin1 = User(
         school_id=school1.id,
         email="admin@springdale.edu",
-        hashed_password=hash_password("password123"),
+        hashed_password=hash_password("admin123"),
         role="ADMIN"
     )
     admin2 = User(
         school_id=school2.id,
         email="admin@oakridge.edu",
-        hashed_password=hash_password("password123"),
+        hashed_password=hash_password("admin123"),
         role="ADMIN"
     )
-    db.add_all([admin1, admin2])
+    teacher1 = User(
+        school_id=school1.id,
+        email="alice.johnson@springdale.edu",
+        hashed_password=hash_password("teacher123"),
+        role="TEACHER"
+    )
+    student1 = User(
+        school_id=school1.id,
+        email="student1@springdale.edu",
+        hashed_password=hash_password("student123"),
+        role="STUDENT"
+    )
+    db.add_all([admin1, admin2, teacher1, student1])
     db.commit()
     
     db.close()

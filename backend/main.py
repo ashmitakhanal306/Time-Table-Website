@@ -31,17 +31,19 @@ def on_startup():
     def _init():
         try:
             Base.metadata.create_all(bind=engine)
+            needs_seed = False
             db = SessionLocal()
             try:
-                if db.query(User).count() == 0:
-                    print("[Startup] Empty database detected. Seeding initial data...")
-                    from backend.seed import seed
-                    seed()
+                needs_seed = (db.query(User).count() == 0)
             finally:
                 db.close()
+            if needs_seed:
+                print("[Startup] Empty database detected. Seeding initial data...")
+                from backend.seed import seed
+                seed()
         except Exception as e:
             print(f"[Startup] Error checking/seeding database: {e}")
-    # Run DB init in a background thread so Render's health probe isn't blocked
+    # Run DB init in a background thread so health probe isn't blocked
     threading.Thread(target=_init, daemon=True).start()
 
 # CORS: In production set CORS_ORIGINS to a comma-separated list of allowed origins
