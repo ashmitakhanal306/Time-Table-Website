@@ -9,7 +9,7 @@
   ],
   "build": {
     "env": {
-      "VITE_API_URL": "https://school-timetable-backend.onrender.com"
+      "VITE_API_URL": "https://backend-production-f090.up.railway.app"
     }
   }
 }
