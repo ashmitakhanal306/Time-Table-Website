@@ -67,6 +67,60 @@ app.add_middleware(
 def health_check():
     return {"status": "ok"}
 
+@app.get("/api/schools/{school_id}/debug/period-slots")
+def debug_period_slots(school_id: int, db: Session = Depends(get_db)):
+    """
+    Fix 1 Debug Endpoint — returns raw PeriodSlot counts by tier for a school.
+    No auth required so it can be hit directly during diagnosis.
+    Remove or gate behind auth after diagnosis is complete.
+    """
+    school = db.query(School).filter_by(id=school_id).first()
+    if not school:
+        raise HTTPException(404, f"School {school_id} not found")
+
+    all_slots = db.query(PeriodSlot).filter_by(school_id=school_id).all()
+
+    # Group by tier
+    by_tier: dict = {}
+    for slot in all_slots:
+        tier = slot.tier or "UNKNOWN"
+        if tier not in by_tier:
+            by_tier[tier] = {"total": 0, "teaching": 0, "break": 0, "slot_types": {}}
+        by_tier[tier]["total"] += 1
+        if slot.is_break:
+            by_tier[tier]["break"] += 1
+        else:
+            by_tier[tier]["teaching"] += 1
+        st = slot.slot_type or "UNKNOWN"
+        by_tier[tier]["slot_types"][st] = by_tier[tier]["slot_types"].get(st, 0) + 1
+
+    # Grades for this school (to cross-ref which tiers have actual grades)
+    grades = db.query(GradeLevel).filter_by(school_id=school_id).all()
+    grades_by_tier: dict = {}
+    for g in grades:
+        t = g.tier or "UNKNOWN"
+        grades_by_tier.setdefault(t, []).append(g.name)
+
+    # Classes
+    classes = db.query(ClassSection).filter_by(school_id=school_id).all()
+
+    return {
+        "school_id": school_id,
+        "school_name": school.name,
+        "total_period_slots": len(all_slots),
+        "slots_by_tier": by_tier,
+        "grades_by_tier": grades_by_tier,
+        "total_grades": len(grades),
+        "total_classes": len(classes),
+        "diagnosis": {
+            tier: (
+                "OK — has slots" if by_tier.get(tier, {}).get("teaching", 0) > 0
+                else "⚠ MISSING SLOTS — grades exist but no teaching periods saved"
+            )
+            for tier in grades_by_tier
+        }
+    }
+
 @app.post("/api/auth/login", response_model=Token)
 def login(req: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == req.email).first()

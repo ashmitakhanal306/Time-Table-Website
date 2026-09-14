@@ -13,7 +13,29 @@ export function getSetupSteps(config) {
   const slots      = config?.period_slots || [];
   const blocks     = config?.activity_blocks || [];
 
-  const nonBreakSlots = slots.filter(s => !s.is_break);
+  // ── Tier-aware period slot check ─────────────────────────────────────────
+  // Find every distinct tier that has at least one grade defined.
+  const activeTiers = [...new Set(grades.map(g => g.tier).filter(Boolean))];
+
+  // For each active tier, check if it has ≥1 non-break slot
+  const tierSlotStatus = activeTiers.map(tier => {
+    const hasSlots = slots.some(s => s.tier === tier && !s.is_break);
+    return { tier, hasSlots };
+  });
+
+  const tiersWithSlots    = tierSlotStatus.filter(t => t.hasSlots);
+  const tiersMissingSlots = tierSlotStatus.filter(t => !t.hasSlots);
+  const allTiersDone      = activeTiers.length > 0 && tiersMissingSlots.length === 0;
+
+  // Human-readable badge detail, e.g. "PRIMARY ✓ · SENIOR ✗"
+  const tierStatusLabel = activeTiers.length === 0
+    ? 'No grades defined yet'
+    : tierSlotStatus.map(t => `${t.tier} ${t.hasSlots ? '✓' : '✗'}`).join(' · ');
+
+  const periodMissingMsg = tiersMissingSlots.length > 0
+    ? `No period slots saved for: ${tiersMissingSlots.map(t => t.tier).join(', ')} — save the Period Structure for each tier before generating`
+    : 'No period structure saved (need at least one non-break slot per active tier)';
+  // ─────────────────────────────────────────────────────────────────────────
 
   return [
     {
@@ -76,11 +98,18 @@ export function getSetupSteps(config) {
       key:    'period_structure',
       label:  '7. Period Structure',
       short:  'Periods',
-      done:   nonBreakSlots.length > 0,
-      count:  nonBreakSlots.length,
-      unit:   'teaching slot',
+      // Done only when EVERY active tier has at least one non-break slot
+      done:   allTiersDone,
+      // Show number of tiers done out of total, or raw count when all done
+      count:  allTiersDone
+        ? slots.filter(s => !s.is_break).length
+        : tiersWithSlots.length,
+      unit:   allTiersDone ? 'teaching slot' : `/ ${activeTiers.length} tier`,
+      // Tier status label shown in badge tooltip / detail
+      tierStatusLabel,
+      tiersMissingSlots,
       blocking: true,
-      missingMsg: 'No period structure saved (need at least one non-break slot)',
+      missingMsg: periodMissingMsg,
     },
     {
       key:    'activity_blocks',
@@ -96,6 +125,7 @@ export function getSetupSteps(config) {
     },
   ];
 }
+
 
 function SetupProgress({ config, activeTab, onTabClick }) {
   const steps = getSetupSteps(config);
@@ -131,13 +161,22 @@ function SetupProgress({ config, activeTab, onTabClick }) {
         const border = step.done ? '#86efac' : step.blocking ? '#fde68a' : '#e2e8f0';
         const textColor = step.done ? '#166534' : step.blocking ? '#92400e' : '#64748b';
         const icon = step.done ? '✓' : step.blocking ? '!' : '○';
+
+        // For the period_structure step, show tier breakdown in the badge
+        const isPeriodStep = step.key === 'period_structure';
+        const titleText = isPeriodStep && step.tierStatusLabel
+          ? (step.done
+              ? `Period structure complete — ${step.count} teaching slot${step.count !== 1 ? 's' : ''} (${step.tierStatusLabel})`
+              : `Periods incomplete: ${step.tierStatusLabel} — ${step.missingMsg}`)
+          : (step.done
+              ? `${step.count} ${step.unit}${step.count !== 1 ? 's' : ''} configured`
+              : step.missingMsg);
+
         return (
           <button
             key={step.key}
             onClick={() => onTabClick(tabName)}
-            title={step.done
-              ? `${step.count} ${step.unit}${step.count !== 1 ? 's' : ''} configured`
-              : step.blocking ? step.missingMsg : step.missingMsg}
+            title={titleText}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -156,7 +195,11 @@ function SetupProgress({ config, activeTab, onTabClick }) {
             }}
           >
             <span>{icon}</span>
-            <span>{step.short}</span>
+            {isPeriodStep && step.tierStatusLabel && !step.done
+              /* Show per-tier breakdown inline when incomplete */
+              ? <span>{step.short}: {step.tierStatusLabel}</span>
+              : <span>{step.short}</span>
+            }
             {step.done && (
               <span style={{ fontWeight: 400 }}>({step.count})</span>
             )}

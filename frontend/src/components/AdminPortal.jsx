@@ -106,6 +106,28 @@ export default function AdminPortal({ schoolId, token }) {
 
   const handleGenerate = async () => {
     if (!canGenerate) return;
+
+    // ── Pre-Generate preflight: check tier-level period slot coverage ─────────
+    // Even if the global "Periods" badge looks done, verify each tier individually.
+    // This catches the case where PRIMARY has slots but SENIOR has none, which
+    // causes a blank grid in the Admin/Teacher/Student portals after generation.
+    if (config) {
+      const grades = config.grades || [];
+      const slots  = config.period_slots || [];
+      const activeTiers = [...new Set(grades.map(g => g.tier).filter(Boolean))];
+      const missingTiers = activeTiers.filter(
+        tier => !slots.some(s => s.tier === tier && !s.is_break)
+      );
+      if (missingTiers.length > 0) {
+        setErrorMsg(
+          `Cannot generate: the Period Structure has not been saved for ${missingTiers.join(', ')}. ` +
+          `Go to Setup → Period Structure, select the missing tier, add slots, and click Save before generating.`
+        );
+        return;
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     setLoading(true);
     setErrorMsg(null);
     setSuccessMsg(null);
