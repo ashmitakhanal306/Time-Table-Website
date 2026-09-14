@@ -10,6 +10,7 @@ function App() {
   const [schoolId, setSchoolId] = useState(null);
   const [schoolName, setSchoolName] = useState('');
   const [roleTab, setRoleTab] = useState('Admin'); // 'Admin', 'Teacher', 'Student'
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Login form state
   const [email, setEmail] = useState('admin@springdale.edu');
@@ -31,7 +32,7 @@ function App() {
       const res = await api.login(email, password);
       setToken(res.access_token);
       
-      // Parse token (dirty but works for extracting school_id without another request)
+      // Parse token (for extracting school_id)
       const payload = JSON.parse(atob(res.access_token.split('.')[1]));
       const sId = payload.school_id;
       setSchoolId(sId);
@@ -70,37 +71,46 @@ function App() {
     setToken(null);
     setSchoolId(null);
     setSchoolName('');
+    setMobileMenuOpen(false);
+  };
+
+  const selectTab = (tab) => {
+    setRoleTab(tab);
+    setMobileMenuOpen(false);
   };
 
   if (!token) {
     if (isRegistering) {
       return (
         <div className="login-container">
-          <div className="login-box" style={{ maxWidth: '400px' }}>
-            <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Register New School</h2>
+          <div className="login-box">
+            <h2 style={{ marginBottom: '0.5rem', textAlign: 'center' }}>Register New School</h2>
+            <p style={{ color: 'var(--text-secondary)', textAlign: 'center', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+              Create your organization account
+            </p>
             {regError && <div className="error-banner">{regError}</div>}
             <form onSubmit={handleRegister}>
               <div className="form-group">
                 <label>School Name</label>
-                <input className="input" type="text" value={regName} onChange={e => setRegName(e.target.value)} required />
+                <input className="input" type="text" placeholder="e.g. Springdale High" value={regName} onChange={e => setRegName(e.target.value)} required />
               </div>
               <div className="form-group">
-                <label>Subdomain (e.g. myschool)</label>
-                <input className="input" type="text" value={regSubdomain} onChange={e => setRegSubdomain(e.target.value)} required />
+                <label>Subdomain (e.g. springdale)</label>
+                <input className="input" type="text" placeholder="springdale" value={regSubdomain} onChange={e => setRegSubdomain(e.target.value)} required />
               </div>
               <div className="form-group">
                 <label>Admin Email</label>
-                <input className="input" type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} required />
+                <input className="input" type="email" placeholder="admin@springdale.edu" value={regEmail} onChange={e => setRegEmail(e.target.value)} required />
               </div>
               <div className="form-group">
                 <label>Admin Password</label>
-                <input className="input" type="password" value={regPassword} onChange={e => setRegPassword(e.target.value)} required />
+                <input className="input" type="password" placeholder="••••••••" value={regPassword} onChange={e => setRegPassword(e.target.value)} required />
               </div>
-              <button className="btn btn-primary" type="submit" style={{ width: '100%', marginTop: '1rem' }}>
+              <button className="btn btn-primary" type="submit" style={{ width: '100%', marginTop: '0.5rem' }}>
                 Register School
               </button>
             </form>
-            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+            <div style={{ marginTop: '1.25rem', textAlign: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
               <button className="btn btn-secondary" onClick={() => setIsRegistering(false)} style={{ width: '100%' }}>
                 Back to Login
               </button>
@@ -113,16 +123,24 @@ function App() {
     return (
       <div className="login-container">
         <div className="login-box">
-          <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Timetable Login</h2>
-          {regSuccess && <div style={{ padding: '1rem', background: '#dcfce3', color: '#166534', borderRadius: '6px', marginBottom: '1rem', border: '1px solid #86efac' }}>{regSuccess}</div>}
+          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+            <span style={{ fontSize: '2rem' }}>🏫</span>
+            <h2 style={{ marginTop: '0.5rem', marginBottom: '0.25rem' }}>Timetable System</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+              Sign in to manage and view schedules
+            </p>
+          </div>
+          
+          {regSuccess && <div style={{ padding: '0.85rem 1rem', background: '#dcfce7', color: '#166534', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #86efac', fontSize: '0.875rem' }}>{regSuccess}</div>}
           {loginError && <div className="error-banner">{loginError}</div>}
           
           <form onSubmit={handleLogin}>
             <div className="form-group">
-              <label>Email</label>
+              <label>Email Address</label>
               <input 
                 className="input" 
                 type="email" 
+                placeholder="admin@springdale.edu"
                 value={email} 
                 onChange={e => setEmail(e.target.value)} 
                 required 
@@ -133,17 +151,18 @@ function App() {
               <input 
                 className="input" 
                 type="password" 
+                placeholder="••••••••"
                 value={password} 
                 onChange={e => setPassword(e.target.value)} 
                 required 
               />
             </div>
-            <button className="btn btn-primary" type="submit" style={{ width: '100%', marginTop: '1rem' }}>
+            <button className="btn btn-primary" type="submit" style={{ width: '100%', marginTop: '0.5rem' }}>
               Sign In
             </button>
           </form>
-          <div style={{ marginTop: '1rem', textAlign: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-            <p style={{ marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Don't have a school yet?</p>
+          <div style={{ marginTop: '1.25rem', textAlign: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+            <p style={{ marginBottom: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Don't have a school registered?</p>
             <button className="btn btn-secondary" onClick={() => setIsRegistering(true)} style={{ width: '100%' }}>
               Register New School
             </button>
@@ -155,47 +174,135 @@ function App() {
 
   return (
     <div className="app-shell">
-      <div className="sidebar">
+      {/* Backdrop for mobile drawer */}
+      <div 
+        className={`sidebar-backdrop ${mobileMenuOpen ? 'mobile-open' : ''}`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
+      {/* Sidebar */}
+      <aside className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-header">
-          <h3 style={{ margin: 0 }}>{schoolName}</h3>
-          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-            Timetable System
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={schoolName || 'School'}>
+              {schoolName || 'School'}
+            </h3>
+            {mobileMenuOpen && (
+              <button 
+                onClick={() => setMobileMenuOpen(false)} 
+                style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                aria-label="Close menu"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <div className="sidebar-brand-badge">
+            <span>📅</span>
+            <span>Timetable Suite</span>
           </div>
         </div>
-        <div className="sidebar-nav">
+        
+        <nav className="sidebar-nav">
           <div 
             className={`nav-item ${roleTab === 'Admin' ? 'active' : ''}`}
-            onClick={() => setRoleTab('Admin')}
+            onClick={() => selectTab('Admin')}
           >
-            Admin Portal
+            <span className="nav-icon">⚙️</span>
+            <span>Admin Portal</span>
           </div>
           <div 
             className={`nav-item ${roleTab === 'Teacher' ? 'active' : ''}`}
-            onClick={() => setRoleTab('Teacher')}
+            onClick={() => selectTab('Teacher')}
           >
-            Teacher Portal
+            <span className="nav-icon">👨‍🏫</span>
+            <span>Teacher Portal</span>
           </div>
           <div 
             className={`nav-item ${roleTab === 'Student' ? 'active' : ''}`}
-            onClick={() => setRoleTab('Student')}
+            onClick={() => selectTab('Student')}
           >
-            Student Portal
+            <span className="nav-icon">🎓</span>
+            <span>Student Portal</span>
           </div>
-          <div style={{ padding: '1.5rem', marginTop: 'auto' }}>
-            <button className="btn btn-secondary" style={{ width: '100%' }} onClick={handleLogout}>
-              Log out
-            </button>
-          </div>
+        </nav>
+
+        <div className="sidebar-footer">
+          <button className="btn btn-secondary" style={{ width: '100%' }} onClick={handleLogout}>
+            <span>🚪</span>
+            <span>Sign Out</span>
+          </button>
         </div>
-      </div>
-      
-      <div className="main-content">
-        {roleTab === 'Admin' && <AdminPortal schoolId={schoolId} token={token} />}
-        {roleTab === 'Teacher' && <TeacherPortal schoolId={schoolId} token={token} />}
-        {roleTab === 'Student' && <StudentPortal schoolId={schoolId} token={token} />}
+      </aside>
+
+      {/* Main Wrapper */}
+      <div className="main-wrapper">
+        {/* Mobile Header Bar */}
+        <header className="mobile-top-bar">
+          <button 
+            className="mobile-nav-toggle"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open Navigation"
+          >
+            ☰
+          </button>
+          
+          <div style={{ textAlign: 'center', flex: 1, padding: '0 0.5rem' }}>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {schoolName || 'School Timetable'}
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--primary-color)', fontWeight: 600 }}>
+              {roleTab === 'Admin' ? 'Admin Portal' : roleTab === 'Teacher' ? 'Teacher Portal' : 'Student Portal'}
+            </div>
+          </div>
+
+          <button 
+            onClick={handleLogout} 
+            className="btn btn-secondary btn-sm"
+            title="Log out"
+            style={{ padding: '0.25rem 0.5rem' }}
+          >
+            🚪
+          </button>
+        </header>
+
+        {/* Content Area */}
+        <main className="main-content">
+          <div className="page-container">
+            {roleTab === 'Admin' && <AdminPortal schoolId={schoolId} token={token} />}
+            {roleTab === 'Teacher' && <TeacherPortal schoolId={schoolId} token={token} />}
+            {roleTab === 'Student' && <StudentPortal schoolId={schoolId} token={token} />}
+          </div>
+        </main>
+
+        {/* Mobile Bottom Navigation */}
+        <nav className="mobile-bottom-nav">
+          <button 
+            className={`mobile-bottom-nav-item ${roleTab === 'Admin' ? 'active' : ''}`}
+            onClick={() => selectTab('Admin')}
+          >
+            <span className="icon">⚙️</span>
+            <span>Admin</span>
+          </button>
+          <button 
+            className={`mobile-bottom-nav-item ${roleTab === 'Teacher' ? 'active' : ''}`}
+            onClick={() => selectTab('Teacher')}
+          >
+            <span className="icon">👨‍🏫</span>
+            <span>Teacher</span>
+          </button>
+          <button 
+            className={`mobile-bottom-nav-item ${roleTab === 'Student' ? 'active' : ''}`}
+            onClick={() => selectTab('Student')}
+          >
+            <span className="icon">🎓</span>
+            <span>Student</span>
+          </button>
+        </nav>
       </div>
     </div>
   );
 }
 
 export default App;
+

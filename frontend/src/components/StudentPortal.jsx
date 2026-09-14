@@ -121,25 +121,31 @@ export default function StudentPortal({ schoolId, token }) {
     return entries.filter(e => e.is_substituted).length;
   }, [entries]);
 
-  if (!config) return <div>Loading config...</div>;
+  if (!config) return <div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>Loading configuration...</div>;
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h2 style={{ margin: 0 }}>Student Portal</h2>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button className="btn btn-secondary" onClick={() => api.downloadExport(schoolId, 'excel', token)}>Export Excel</button>
-          <button className="btn btn-secondary" onClick={() => api.downloadExport(schoolId, 'pdf', token)}>Export PDF</button>
+      <div className="page-header">
+        <h2 className="page-title">Student Portal</h2>
+        <div className="btn-group">
+          <button className="btn btn-secondary btn-sm" onClick={() => api.downloadExport(schoolId, 'excel', token)}>
+            <span>📊</span>
+            <span>Export Excel</span>
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={() => api.downloadExport(schoolId, 'pdf', token)}>
+            <span>📄</span>
+            <span>Export PDF</span>
+          </button>
         </div>
       </div>
 
       {errorMsg && <div className="error-banner">{errorMsg}</div>}
 
-      <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-        <label style={{ fontWeight: 600 }}>View As (Class Section):</label>
+      <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <label style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Select Class Section:</label>
         <select 
           className="select" 
-          style={{ width: '250px' }} 
+          style={{ maxWidth: '300px', flex: '1 1 200px' }} 
           value={selectedClassId} 
           onChange={e => setSelectedClassId(e.target.value)}
         >
@@ -152,17 +158,19 @@ export default function StudentPortal({ schoolId, token }) {
       {/* Date-Aware Controls */}
       <div className="date-controls-bar">
         <div className="date-picker-group">
-          <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>Schedule Date:</label>
+          <label style={{ fontWeight: 600, fontSize: '0.85rem' }}>Date:</label>
           <input 
             type="date" 
             className="input" 
-            style={{ width: '160px', padding: '0.35rem 0.6rem' }} 
+            style={{ width: 'auto', minWidth: '135px', padding: '0.35rem 0.6rem' }} 
             value={selectedDate} 
             onChange={e => setSelectedDate(e.target.value)} 
           />
-          <button className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }} onClick={() => shiftDate(-1)} title="Previous Day">◀ Prev</button>
-          <button className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }} onClick={() => setSelectedDate(getTodayStr())}>Today</button>
-          <button className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }} onClick={() => shiftDate(1)} title="Next Day">Next ▶</button>
+          <div style={{ display: 'inline-flex', gap: '4px' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => shiftDate(-1)} title="Previous Day">◀</button>
+            <button className="btn btn-secondary btn-sm" onClick={() => setSelectedDate(getTodayStr())}>Today</button>
+            <button className="btn btn-secondary btn-sm" onClick={() => shiftDate(1)} title="Next Day">▶</button>
+          </div>
           <span className="date-day-badge">{activeDayInfo.name}</span>
         </div>
         
@@ -171,13 +179,13 @@ export default function StudentPortal({ schoolId, token }) {
             className={`view-mode-btn ${viewMode === 'day' ? 'active' : ''}`}
             onClick={() => setViewMode('day')}
           >
-            📅 Day Schedule (Date-Aware)
+            📅 Day View
           </button>
           <button 
             className={`view-mode-btn ${viewMode === 'week' ? 'active' : ''}`}
             onClick={() => setViewMode('week')}
           >
-            🗓️ Full Week Template
+            🗓️ Week Template
           </button>
         </div>
       </div>
@@ -186,16 +194,16 @@ export default function StudentPortal({ schoolId, token }) {
         <div className="substitution-alert-box">
           <span style={{ fontSize: '1.25rem' }}>🔄</span>
           <div>
-            <strong>Teacher Substitution Notice ({activeDayInfo.name}, {selectedDate}):</strong> {substitutedCount} period(s) will be taught by a substitute teacher today, highlighted in orange below.
+            <strong>Teacher Substitution Notice ({activeDayInfo.name}, {selectedDate}):</strong> {substitutedCount} period(s) taught by a substitute teacher today.
           </div>
         </div>
       )}
 
       {entries.length === 0 && !errorMsg ? (
-        <div style={{ padding: '2rem', textAlign: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+        <div style={{ padding: '2.5rem 1.5rem', textAlign: 'center', background: 'var(--surface-color)', borderRadius: '12px', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
           {viewMode === 'day' 
             ? `No scheduled periods for ${selectedClass?.name || 'this class'} on ${activeDayInfo.name} (${selectedDate}).` 
-            : 'No timetable published yet.'}
+            : 'No timetable published yet for this class section.'}
         </div>
       ) : (
         <TimetableGrid 
@@ -214,3 +222,4 @@ export default function StudentPortal({ schoolId, token }) {
     </div>
   );
 }
+

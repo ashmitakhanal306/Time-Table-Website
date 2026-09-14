@@ -204,7 +204,7 @@ export default function AdminPortal({ schoolId, token }) {
   };
   
   const handleRecommendSubs = async () => {
-    if (!subDate || !subPeriod || !subAbsentTeacher) { setSubError('Fill all fields'); return; }
+    if (!subDate || !subPeriod || !subAbsentTeacher) { setSubError('Please fill all fields'); return; }
     setSubError(null);
     try {
       const candidates = await api.recommendSubstitutes(schoolId, subAbsentTeacher, subDate, subPeriod, token);
@@ -224,64 +224,72 @@ export default function AdminPortal({ schoolId, token }) {
       }, token);
       setSubCandidates([]);
       setDrawerOpen(false);
-      setSuccessMsg('Substitute assigned successfully');
+      setSuccessMsg('Substitute assigned successfully!');
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch(e) {
       setSubError(e.message);
     }
   };
 
-  if (!config) return <div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>Loading config…</div>;
+  if (!config) return <div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>Loading configuration…</div>;
 
   return (
     <div>
       {/* ── Header bar ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem', flexWrap: 'wrap' }}>
-        <h2 style={{ margin: 0 }}>Admin Portal</h2>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button className="btn btn-secondary" onClick={() => setDrawerOpen(true)}>Manage Substitutions</button>
-          <button className="btn btn-secondary" onClick={() => api.downloadExport(schoolId, 'excel', token)}>Export Excel</button>
-          <button className="btn btn-secondary" onClick={() => api.downloadExport(schoolId, 'pdf', token)}>Export PDF</button>
-          <button className="btn btn-secondary" onClick={handlePublish}>Publish</button>
+      <div className="page-header">
+        <h2 className="page-title">Admin Portal</h2>
+        <div className="btn-group">
+          <button className="btn btn-secondary btn-sm" onClick={() => setDrawerOpen(true)}>
+            <span>🔄</span>
+            <span>Substitutions</span>
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={() => api.downloadExport(schoolId, 'excel', token)}>
+            <span>📊</span>
+            <span>Excel</span>
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={() => api.downloadExport(schoolId, 'pdf', token)}>
+            <span>📄</span>
+            <span>PDF</span>
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={handlePublish}>
+            <span>🚀</span>
+            <span>Publish</span>
+          </button>
 
           {/* ── Smart Generate Button ── */}
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <button
-              className="btn btn-primary"
-              onClick={handleGenerate}
-              disabled={loading || !canGenerate}
-              title={generateTooltip}
-              style={{
-                opacity:    (!canGenerate || loading) ? 0.6 : 1,
-                cursor:     (!canGenerate || loading) ? 'not-allowed' : 'pointer',
-                position:   'relative',
-              }}
-            >
-              {loading ? 'Generating…' : 'Generate Timetable'}
-            </button>
-          </div>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={handleGenerate}
+            disabled={loading || !canGenerate}
+            title={generateTooltip}
+          >
+            <span>✨</span>
+            <span>{loading ? 'Generating…' : 'Generate Timetable'}</span>
+          </button>
         </div>
       </div>
 
       {/* ── Setup incomplete banner ── */}
       {!canGenerate && portalTab === 'Timetable' && (
         <div style={{
-          padding: '0.75rem 1rem',
-          marginBottom: '1rem',
-          background: '#fffbeb',
-          border: '1px solid #fde68a',
-          borderRadius: '8px',
-          color: '#92400e',
+          padding: '0.85rem 1.1rem',
+          marginBottom: '1.25rem',
+          background: 'var(--warning-bg)',
+          border: '1px solid var(--warning-border)',
+          borderRadius: '10px',
+          color: 'var(--warning-text)',
           fontSize: '0.875rem',
         }}>
-          <strong>⚠️ Setup incomplete — Generate Timetable is disabled.</strong>{' '}
-          <button
-            style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', padding: 0, fontFamily: 'inherit' }}
-            onClick={() => setPortalTab('Setup')}
-          >
-            Go to School Setup →
-          </button>
-          <ul style={{ marginTop: '0.4rem', paddingLeft: '1.25rem', lineHeight: 1.8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <strong>⚠️ Setup incomplete — timetable generation requires all required steps.</strong>
+            <button
+              style={{ background: 'var(--primary-color)', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '0.82rem', padding: '0.3rem 0.75rem', borderRadius: '6px', fontFamily: 'inherit' }}
+              onClick={() => setPortalTab('Setup')}
+            >
+              Complete Setup →
+            </button>
+          </div>
+          <ul style={{ marginTop: '0.5rem', paddingLeft: '1.25rem', lineHeight: 1.6, fontSize: '0.82rem' }}>
             {blockingIssues.map((issue, i) => <li key={i}>{issue}</li>)}
           </ul>
         </div>
@@ -295,13 +303,13 @@ export default function AdminPortal({ schoolId, token }) {
             onClick={() => setPortalTab(tab)}
             style={{
               cursor: 'pointer',
-              padding: '0.6rem 1.25rem',
+              padding: '0.65rem 1.35rem',
               fontWeight: portalTab === tab ? 700 : 500,
               color: portalTab === tab ? 'var(--primary-color)' : 'var(--text-secondary)',
               borderBottom: portalTab === tab ? '2px solid var(--primary-color)' : '2px solid transparent',
               marginBottom: '-2px',
-              fontSize: '0.9rem',
-              transition: 'color 0.15s',
+              fontSize: '0.925rem',
+              transition: 'all 0.15s',
             }}
           >
             {tab === 'Setup' && !canGenerate
@@ -314,7 +322,7 @@ export default function AdminPortal({ schoolId, token }) {
       </div>
 
       {errorMsg   && <div className="error-banner">{errorMsg}</div>}
-      {successMsg && <div style={{ padding: '1rem', background: '#dcfce3', color: '#166534', borderRadius: '6px', marginBottom: '1rem', border: '1px solid #86efac' }}>{successMsg}</div>}
+      {successMsg && <div style={{ padding: '0.85rem 1rem', background: 'var(--success-bg)', color: 'var(--success-text)', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid var(--success-border)', fontSize: '0.875rem' }}>{successMsg}</div>}
 
       {portalTab === 'Setup' ? (
         <SchoolSetup schoolId={schoolId} token={token} config={config} reloadConfig={loadConfig} />
@@ -322,28 +330,28 @@ export default function AdminPortal({ schoolId, token }) {
         <>
           <div className="stats-grid">
             <div className="stat-card">
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Classes</div>
+              <div className="stat-title">Classes</div>
               <div className="stat-value">{config.classes?.length || 0}</div>
             </div>
             <div className="stat-card">
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Teachers</div>
+              <div className="stat-title">Teachers</div>
               <div className="stat-value">{config.teachers?.length || 0}</div>
             </div>
             <div className="stat-card">
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Subjects</div>
+              <div className="stat-title">Subjects</div>
               <div className="stat-value">{config.subjects?.length || 0}</div>
             </div>
             <div className="stat-card">
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Requirements</div>
+              <div className="stat-title">Requirements</div>
               <div className="stat-value">{config.requirements?.length || 0}</div>
             </div>
           </div>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ marginRight: '1rem', fontWeight: 500 }}>Select Class Section:</label>
+          <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <label style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Select Class Section:</label>
             <select
               className="select"
-              style={{ width: '250px' }}
+              style={{ maxWidth: '300px', flex: '1 1 200px' }}
               value={selectedClassId}
               onChange={e => setSelectedClassId(e.target.value)}
             >
@@ -354,7 +362,7 @@ export default function AdminPortal({ schoolId, token }) {
           </div>
 
           {config.classes?.length === 0 && (
-            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', background: '#f8fafc', border: '1px dashed var(--border-color)', borderRadius: 8 }}>
+            <div style={{ padding: '2.5rem 1.5rem', textAlign: 'center', color: 'var(--text-secondary)', background: 'var(--surface-color)', border: '1px dashed var(--border-color)', borderRadius: '12px' }}>
               No classes configured yet.{' '}
               <button style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
                 onClick={() => setPortalTab('Setup')}>
@@ -364,11 +372,11 @@ export default function AdminPortal({ schoolId, token }) {
           )}
 
           {config.classes?.length > 0 && entries.length === 0 && (
-            <div style={{ padding: '1.5rem 2rem', textAlign: 'center', color: 'var(--text-secondary)', background: '#f8fafc', border: '1px dashed var(--border-color)', borderRadius: 8, marginTop: '1rem' }}>
-              No timetable entries yet for this class.{' '}
+            <div style={{ padding: '2rem 1.5rem', textAlign: 'center', color: 'var(--text-secondary)', background: 'var(--surface-color)', border: '1px dashed var(--border-color)', borderRadius: '12px', marginTop: '1rem' }}>
+              No timetable entries yet for this class section.{' '}
               {canGenerate
-                ? <span>Click <strong>Generate Timetable</strong> to create one.</span>
-                : <span>Complete setup first, then Generate Timetable.</span>}
+                ? <span>Click <strong>Generate Timetable</strong> to automatically generate a schedule.</span>
+                : <span>Complete the setup steps first, then click Generate Timetable.</span>}
             </div>
           )}
 
@@ -376,6 +384,7 @@ export default function AdminPortal({ schoolId, token }) {
             periodSlots={periodSlots}
             entries={entries}
             subjectsById={subjectsById}
+            teachersById={teachersById}
             activityBlock={activityBlock}
             onCellClick={onCellClick}
             metaLabel={(entry) => teachersById[entry.teacher_id]?.name || 'Unknown'}
@@ -385,12 +394,12 @@ export default function AdminPortal({ schoolId, token }) {
 
       {/* Edit Modal */}
       {editingCell && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setEditingCell(null); }}>
           <div className="modal-content">
-            <h3>Edit Entry</h3>
+            <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Edit Timetable Slot</h3>
             {editError && <div className="error-banner" style={{ marginTop: '1rem' }}>{editError}</div>}
             
-            <div style={{ marginTop: '1.5rem' }}>
+            <div style={{ marginTop: '1.25rem' }}>
               <div className="form-group">
                 <label>Subject</label>
                 <select className="select" value={editSubjectId} onChange={e => setEditSubjectId(e.target.value)}>
@@ -398,7 +407,7 @@ export default function AdminPortal({ schoolId, token }) {
                 </select>
               </div>
               
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group">
                 <label>Teacher (Qualified Only)</label>
                 <select className="select" value={editTeacherId} onChange={e => setEditTeacherId(e.target.value)}>
                   <option value="">-- Select Teacher --</option>
@@ -406,9 +415,9 @@ export default function AdminPortal({ schoolId, token }) {
                 </select>
               </div>
               
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group">
                 <label>Room Name</label>
-                <input className="input" type="text" value={editRoomName} onChange={e => setEditRoomName(e.target.value)} />
+                <input className="input" type="text" placeholder="e.g. Lab 1, Room 204" value={editRoomName} onChange={e => setEditRoomName(e.target.value)} />
               </div>
             </div>
             
@@ -420,48 +429,58 @@ export default function AdminPortal({ schoolId, token }) {
         </div>
       )}
       
-      {/* Subs Drawer */}
+      {/* Subs Drawer Backdrop and Drawer */}
       {drawerOpen && (
-        <div className="drawer">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-            <h2>Substitutions</h2>
-            <button className="btn btn-secondary" onClick={() => { setDrawerOpen(false); setSubCandidates([]); }}>Close</button>
-          </div>
-          
-          <div className="form-group">
-            <label>Date</label>
-            <input type="date" className="input" value={subDate} onChange={e => setSubDate(e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label>Period Number</label>
-            <input type="number" className="input" min="1" value={subPeriod} onChange={e => setSubPeriod(parseInt(e.target.value))} />
-          </div>
-          <div className="form-group">
-            <label>Absent Teacher</label>
-            <select className="select" value={subAbsentTeacher} onChange={e => setSubAbsentTeacher(e.target.value)}>
-              <option value="">-- Select --</option>
-              {config.teachers?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-          </div>
-          <button className="btn btn-primary" style={{ width: '100%', marginBottom: '2rem' }} onClick={handleRecommendSubs}>Find Substitutes</button>
-          
-          {subError && <div className="error-banner">{subError}</div>}
-          
-          <div className="candidates-list">
-            {(Array.isArray(subCandidates) ? subCandidates : []).map((c, i) => (
-              <div key={c.teacher_id} className={`sub-candidate ${i === 0 ? 'top-pick' : ''}`}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <div style={{ fontWeight: 600 }}>{c.teacher_name} {i === 0 && '(Top Pick)'}</div>
-                  <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem' }} onClick={() => handleAssignSub(c.teacher_id)}>Assign</button>
+        <>
+          <div 
+            className="modal-overlay"
+            style={{ zIndex: 48 }}
+            onClick={() => setDrawerOpen(false)}
+          />
+          <div className="drawer">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Substitutions</h3>
+              <button className="btn btn-secondary btn-sm" onClick={() => { setDrawerOpen(false); setSubCandidates([]); }}>✕ Close</button>
+            </div>
+            
+            <div className="form-group">
+              <label>Date</label>
+              <input type="date" className="input" value={subDate} onChange={e => setSubDate(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>Period Number</label>
+              <input type="number" className="input" min="0" max="12" value={subPeriod} onChange={e => setSubPeriod(parseInt(e.target.value) || 1)} />
+            </div>
+            <div className="form-group">
+              <label>Absent Teacher</label>
+              <select className="select" value={subAbsentTeacher} onChange={e => setSubAbsentTeacher(e.target.value)}>
+                <option value="">-- Select Absent Teacher --</option>
+                {config.teachers?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+            <button className="btn btn-primary" style={{ width: '100%', marginBottom: '1.5rem' }} onClick={handleRecommendSubs}>
+              Find Substitutes
+            </button>
+            
+            {subError && <div className="error-banner">{subError}</div>}
+            
+            <div className="candidates-list" style={{ flex: 1, overflowY: 'auto' }}>
+              {(Array.isArray(subCandidates) ? subCandidates : []).map((c, i) => (
+                <div key={c.teacher_id} className={`sub-candidate ${i === 0 ? 'top-pick' : ''}`}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{c.teacher_name} {i === 0 && '🌟 Top Pick'}</div>
+                    <button className="btn btn-primary btn-sm" onClick={() => handleAssignSub(c.teacher_id)}>Assign</button>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: c.qualified ? 'var(--text-secondary)' : 'var(--danger-text)' }}>
+                    {c.reason}
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.875rem', color: c.qualified ? 'var(--text-secondary)' : 'var(--danger-color)' }}>
-                  {c.reason}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
 }
+

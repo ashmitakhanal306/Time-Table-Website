@@ -121,28 +121,34 @@ export default function TeacherPortal({ schoolId, token }) {
     return entries.filter(e => e.is_substituted).length;
   }, [entries]);
 
-  if (!config) return <div>Loading config...</div>;
+  if (!config) return <div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>Loading configuration...</div>;
 
   const selectedTeacher = teachersById[selectedTeacherId];
   const maxPeriods = selectedTeacher?.max_periods_per_day || 5;
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h2 style={{ margin: 0 }}>Teacher Portal</h2>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button className="btn btn-secondary" onClick={() => api.downloadExport(schoolId, 'excel', token)}>Export Excel</button>
-          <button className="btn btn-secondary" onClick={() => api.downloadExport(schoolId, 'pdf', token)}>Export PDF</button>
+      <div className="page-header">
+        <h2 className="page-title">Teacher Portal</h2>
+        <div className="btn-group">
+          <button className="btn btn-secondary btn-sm" onClick={() => api.downloadExport(schoolId, 'excel', token)}>
+            <span>📊</span>
+            <span>Export Excel</span>
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={() => api.downloadExport(schoolId, 'pdf', token)}>
+            <span>📄</span>
+            <span>Export PDF</span>
+          </button>
         </div>
       </div>
 
       {errorMsg && <div className="error-banner">{errorMsg}</div>}
 
-      <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-        <label style={{ fontWeight: 600 }}>View As (Teacher):</label>
+      <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <label style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>View As Teacher:</label>
         <select 
           className="select" 
-          style={{ width: '250px' }} 
+          style={{ maxWidth: '300px', flex: '1 1 200px' }} 
           value={selectedTeacherId} 
           onChange={e => setSelectedTeacherId(e.target.value)}
         >
@@ -155,17 +161,19 @@ export default function TeacherPortal({ schoolId, token }) {
       {/* Date-Aware Controls */}
       <div className="date-controls-bar">
         <div className="date-picker-group">
-          <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>Schedule Date:</label>
+          <label style={{ fontWeight: 600, fontSize: '0.85rem' }}>Date:</label>
           <input 
             type="date" 
             className="input" 
-            style={{ width: '160px', padding: '0.35rem 0.6rem' }} 
+            style={{ width: 'auto', minWidth: '135px', padding: '0.35rem 0.6rem' }} 
             value={selectedDate} 
             onChange={e => setSelectedDate(e.target.value)} 
           />
-          <button className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }} onClick={() => shiftDate(-1)} title="Previous Day">◀ Prev</button>
-          <button className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }} onClick={() => setSelectedDate(getTodayStr())}>Today</button>
-          <button className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }} onClick={() => shiftDate(1)} title="Next Day">Next ▶</button>
+          <div style={{ display: 'inline-flex', gap: '4px' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => shiftDate(-1)} title="Previous Day">◀</button>
+            <button className="btn btn-secondary btn-sm" onClick={() => setSelectedDate(getTodayStr())}>Today</button>
+            <button className="btn btn-secondary btn-sm" onClick={() => shiftDate(1)} title="Next Day">▶</button>
+          </div>
           <span className="date-day-badge">{activeDayInfo.name}</span>
         </div>
         
@@ -174,13 +182,13 @@ export default function TeacherPortal({ schoolId, token }) {
             className={`view-mode-btn ${viewMode === 'day' ? 'active' : ''}`}
             onClick={() => setViewMode('day')}
           >
-            📅 Day Schedule (Date-Aware)
+            📅 Day View
           </button>
           <button 
             className={`view-mode-btn ${viewMode === 'week' ? 'active' : ''}`}
             onClick={() => setViewMode('week')}
           >
-            🗓️ Full Week Template
+            🗓️ Week Template
           </button>
         </div>
       </div>
@@ -189,23 +197,23 @@ export default function TeacherPortal({ schoolId, token }) {
         <div className="substitution-alert-box">
           <span style={{ fontSize: '1.25rem' }}>🔄</span>
           <div>
-            <strong>Substitution Active Today ({activeDayInfo.name}, {selectedDate}):</strong> You are assigned as a substitute teacher for {substitutedCount} period(s) marked in orange below.
+            <strong>Substitution Active Today ({activeDayInfo.name}, {selectedDate}):</strong> You are assigned as a substitute teacher for {substitutedCount} period(s).
           </div>
         </div>
       )}
 
       {selectedTeacher && viewMode === 'week' && (
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
+        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))' }}>
           {DAYS.map(day => {
             const count = workloadByDay[day.id] || 0;
             const ratio = Math.min(100, (count / maxPeriods) * 100);
             return (
-              <div key={day.id} className="stat-card" style={{ padding: '1rem' }}>
-                <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{day.name}</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+              <div key={day.id} className="stat-card" style={{ padding: '0.85rem 1rem' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.35rem' }}>{day.name}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                   <span>{count} / {maxPeriods} periods</span>
                 </div>
-                <div style={{ height: '8px', background: 'var(--bg-color)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ height: '6px', background: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
                   <div style={{ 
                     height: '100%', 
                     width: `${ratio}%`, 
@@ -220,10 +228,10 @@ export default function TeacherPortal({ schoolId, token }) {
       )}
 
       {entries.length === 0 && !errorMsg ? (
-        <div style={{ padding: '2rem', textAlign: 'center', background: 'white', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+        <div style={{ padding: '2.5rem 1.5rem', textAlign: 'center', background: 'var(--surface-color)', borderRadius: '12px', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
           {viewMode === 'day' 
-            ? `No scheduled periods for ${selectedTeacher?.name || 'teacher'} on ${activeDayInfo.name} (${selectedDate}).` 
-            : 'No timetable published yet.'}
+            ? `No scheduled teaching periods for ${selectedTeacher?.name || 'teacher'} on ${activeDayInfo.name} (${selectedDate}).` 
+            : 'No timetable entries published yet.'}
         </div>
       ) : (
         <TimetableGrid 
@@ -231,7 +239,7 @@ export default function TeacherPortal({ schoolId, token }) {
           entries={entries}
           subjectsById={subjectsById}
           teachersById={teachersById}
-          activityBlock={null} // Teachers don't see class-specific activity block styling here
+          activityBlock={null}
           onCellClick={null}   // Read-only
           viewDate={viewMode === 'day' ? selectedDate : null}
           activeDayId={activeDayInfo.id}
@@ -242,3 +250,4 @@ export default function TeacherPortal({ schoolId, token }) {
     </div>
   );
 }
+

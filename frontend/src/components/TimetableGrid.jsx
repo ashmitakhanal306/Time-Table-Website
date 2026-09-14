@@ -20,7 +20,13 @@ export default function TimetableGrid({
   activeDayId,
   singleDay = false
 }) {
-  if (!periodSlots || periodSlots.length === 0) return <div>No period slots available for this tier.</div>;
+  if (!periodSlots || periodSlots.length === 0) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', background: 'var(--surface-color)', borderRadius: '12px', border: '1px dashed var(--border-color)', color: 'var(--text-secondary)' }}>
+        No period slots configured for this tier yet.
+      </div>
+    );
+  }
 
   // Group entries by day and period
   const entryMap = {};
@@ -42,25 +48,39 @@ export default function TimetableGrid({
   return (
     <div className="timetable-container">
       {activityBlock && (
-        <div style={{ marginBottom: '1rem' }}>
-          <strong>Activity Block: </strong> 
-          {DAYS.find(d => d.id === activityBlock.day_of_week)?.name}, 
-          Periods {activityBlock.start_period} - {activityBlock.end_period}
+        <div style={{ 
+          marginBottom: '1rem', 
+          padding: '0.6rem 1rem', 
+          background: '#fefce8', 
+          border: '1px solid #fef08a', 
+          borderRadius: '8px', 
+          fontSize: '0.85rem',
+          color: '#854d0e',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span>⚡</span>
+          <div>
+            <strong>Activity Block: </strong> 
+            {DAYS.find(d => d.id === activityBlock.day_of_week)?.name}, 
+            Periods {activityBlock.start_period} – {activityBlock.end_period}
+          </div>
         </div>
       )}
       
       <div className="legend">
         <div className="legend-item">
           <div className="legend-box" style={{ background: 'var(--academic-color)', border: '1px solid var(--academic-border)' }}></div>
-          <span>Academic Subject</span>
+          <span>Academic</span>
         </div>
         <div className="legend-item">
           <div className="legend-box" style={{ background: 'var(--activity-color)', border: '1px solid var(--activity-border)' }}></div>
-          <span>Activity Subject</span>
+          <span>Activity</span>
         </div>
         <div className="legend-item">
           <div className="legend-box" style={{ background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)', border: '2px solid #f97316' }}></div>
-          <span style={{ fontWeight: 600, color: '#9a3412' }}>Substituted Class</span>
+          <span style={{ fontWeight: 600, color: '#9a3412' }}>Substituted</span>
         </div>
       </div>
 
@@ -73,13 +93,13 @@ export default function TimetableGrid({
                 <th key={d.id} className={activeDayId === d.id ? 'active-day-col' : ''}>
                   <div>{d.name}</div>
                   {viewDate && (
-                    <div style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-secondary)', marginTop: '2px' }}>
                       {viewDate}
                     </div>
                   )}
                   {!singleDay && activeDayId === d.id && !viewDate && (
-                    <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--primary-color)' }}>
-                      ● Active Day
+                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--primary-color)', marginTop: '2px' }}>
+                      ● Today
                     </div>
                   )}
                 </th>
@@ -91,7 +111,7 @@ export default function TimetableGrid({
               <tr key={slot.period_number}>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <div><strong>P{slot.period_number}</strong></div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
                     {slot.start_time} - {slot.end_time}
                   </div>
                 </td>
@@ -131,22 +151,23 @@ export default function TimetableGrid({
                       <div title={tooltipText} style={{ width: '100%' }}>
                         {entry.is_substituted && (
                           <div className="substitute-badge">
-                            <span className="badge-icon">🔄</span>
-                            <span>SUBSTITUTE</span>
+                            <span>🔄 SUB</span>
                           </div>
                         )}
-                        <div style={{ fontWeight: 600 }}>{subject?.name || 'Unknown'}</div>
-                        <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{subject?.name || 'Unknown'}</div>
+                        <div style={{ fontSize: '0.75rem', marginTop: '0.2rem', color: 'inherit' }}>
                           {metaLabel(entry)}
                         </div>
                         {entry.is_substituted && originalTeacher && (
                           <div className="substitute-note">
-                            (normally {originalTeacher.name})
+                            (was {originalTeacher.name})
                           </div>
                         )}
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
-                          {entry.room_name}
-                        </div>
+                        {entry.room_name && (
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+                            📍 {entry.room_name}
+                          </div>
+                        )}
                       </div>
                     );
                   } else if (isDayColActive && !singleDay) {
@@ -166,6 +187,7 @@ export default function TimetableGrid({
                           onCellClick(entry, slot, day.id);
                         }
                       }}
+                      style={{ cursor: onCellClick ? 'pointer' : 'default' }}
                     >
                       {content}
                     </td>
@@ -179,3 +201,4 @@ export default function TimetableGrid({
     </div>
   );
 }
+

@@ -406,7 +406,8 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
         </span>
       </p>
 
-      <table className="table" style={{ width: '100%', marginBottom: '1.5rem', borderCollapse: 'collapse' }}>
+      <div className="table-responsive">
+        <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
             <th>Name</th>
@@ -479,6 +480,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
           )}
         </tbody>
       </table>
+      </div>
 
       <h4 style={{ marginBottom: '0.75rem' }}>Add Grade</h4>
       <div style={{ background: '#f9fafb', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: 560 }}>
@@ -558,7 +560,8 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
         </p>
         {depStep.depUnmet && <DepWarning message={depStep.depLabel} />}
 
-        <table className="table" style={{ width: '100%', marginBottom: '1.5rem', borderCollapse: 'collapse' }}>
+        <div className="table-responsive">
+        <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th>Class Name</th>
@@ -623,6 +626,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
             )}
           </tbody>
         </table>
+        </div>
 
         <h4 style={{ marginBottom: '0.75rem' }}>Add Class Section</h4>
         <div style={{ background: '#f9fafb', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1.25rem', maxWidth: 520 }}>
@@ -675,7 +679,8 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1rem' }}>
         Mark a subject as <strong>Activity</strong> if it's used in activity blocks (e.g., PT, Music). Activity subjects use their code in Activity Block configuration.
       </p>
-      <table className="table" style={{ width: '100%', marginBottom: '1.5rem', borderCollapse: 'collapse' }}>
+      <div className="table-responsive">
+      <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr><th>Name</th><th>Code</th><th>Activity?</th><th>Default Freq/Week</th><th>Action</th></tr>
         </thead>
@@ -723,6 +728,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
           )}
         </tbody>
       </table>
+      </div>
 
       <h4 style={{ marginBottom: '0.75rem' }}>Add Subject</h4>
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap', background: '#f9fafb', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1rem' }}>
@@ -766,8 +772,8 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1rem' }}>
           Assign which subjects each teacher can teach. The solver only assigns a teacher to a class-period if they are qualified for that subject.
         </p>
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table" style={{ width: '100%', marginBottom: '1.5rem', borderCollapse: 'collapse' }}>
+        <div className="table-responsive">
+          <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
                 <th style={{ minWidth: 40 }}>ID</th>
@@ -921,7 +927,8 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
           The solver uses these requirements to build the timetable. You must have at least one requirement before generating.
         </p>
 
-        <table className="table" style={{ width: '100%', marginBottom: '1.5rem', borderCollapse: 'collapse' }}>
+        <div className="table-responsive">
+        <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th>Class</th>
@@ -965,6 +972,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
             )}
           </tbody>
         </table>
+        </div>
 
         <h4 style={{ marginBottom: '0.75rem' }}>Add Requirement</h4>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap', background: '#f9fafb', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1rem' }}>
@@ -1038,7 +1046,8 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
             <span> Available activity codes: {activitySubjects.map(s => <code key={s.id} style={{ background: '#f1f5f9', padding: '1px 5px', borderRadius: 3, marginLeft: 4, fontSize: '0.8rem' }}>{s.code}</code>)}</span>
           )}
         </p>
-        <table className="table" style={{ width: '100%', marginBottom: '1.5rem', borderCollapse: 'collapse' }}>
+        <div className="table-responsive">
+        <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr><th>Tier</th><th>Day</th><th>Start Period</th><th>End Period</th><th>Activity Types</th><th>Action</th></tr>
           </thead>
@@ -1106,6 +1115,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
             )}
           </tbody>
         </table>
+        </div>
 
         <h4 style={{ marginBottom: '0.75rem' }}>Add Activity Block</h4>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap', background: '#f9fafb', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1rem' }}>
@@ -1215,6 +1225,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
                       (Monday preview — same pattern repeats Mon–Fri)
                     </span>
                   </div>
+                  <div className="table-responsive">
                   <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr>
@@ -1256,6 +1267,7 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
                       })}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               );
             })}
@@ -1446,10 +1458,10 @@ export default function SchoolSetup({ schoolId, token, config, reloadConfig }) {
 
 
   return (
-    <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', marginTop: '2rem' }}>
-      <h2 style={{ marginBottom: '0.5rem' }}>School Setup</h2>
+    <div style={{ background: 'var(--surface-color)', padding: '1.5rem', borderRadius: '14px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', marginTop: '1rem' }}>
+      <h2 style={{ marginBottom: '0.35rem', fontSize: '1.35rem' }}>School Setup</h2>
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
-        Complete the steps below in order — each section depends on the previous one. Watch the progress bar at the top.
+        Configure your school settings and timetable rules. Complete each step in sequence.
       </p>
 
       {/* ── Progress Checklist Strip ── */}
